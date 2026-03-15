@@ -1,0 +1,32 @@
+# C++ Build directories
+**/build/
+*.exe
+
+# CMake (root level)
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json
+
+# Conan (generated in build/)
+conan_toolchain.cmake
+conandeps_legacy.cmake
+cmakedeps_macros.cmake
+CMakePresets.json
+*-config.cmake
+*-config-version.cmake
+*-Targets.cmake
+*-Target-*.cmake
+*-*-data.cmake
+conanbuild.bat
+conanrun.bat
+deactivate_conan*.bat
+conanbuildenv-*.bat
+conanrunenv-*.bat
+
+# Rust
+target/
+Cargo.lock
+
+# IDE
+.clangd

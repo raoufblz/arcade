@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "games/*",
+    "shared"
+]
+resolver = "2" # Uses the latest feature resolver
