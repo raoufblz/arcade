@@ -3,77 +3,81 @@
 #include <cmath>
 
 int main(){
-    const int 	screenWidth = 	1400;
-    const int 	screenHeight = 	800;
-    const float speed = 		400.0f;
-    const float speed_ball = 	500.0f;
-    const int 	rect_width = 	35;
-    const int 	rect_height = 	100;
-    const float ball_rad = 		30.0f;
+    const int 	screenWidth   = 1400;
+    const int 	screenHeight  = 800;
+    const float speed         = 400.0f;
+    float 		speed_ball    = 500.0f;
+    const int 	rect_width    = 35;
+    const int 	rect_height   = 100;
+    const float ball_rad 	  = 30.0f;
 
     InitWindow(screenWidth, screenHeight, "pong!");
     SetTargetFPS(60);
 
     Vector2 position_1 = { 1350.0f - rect_width, 350.0f };
-    Vector2 position_2 = {50.0f, 350.0f};
+    Vector2 position_2 = { 50.0f, 350.0f };
 
-    int ballpos_y = GetRandomValue(15,785);
-    int angle = GetRandomValue(1, 359);
-    float radians = angle * DEG2RAD;
+    int 	ballpos_y 	   = GetRandomValue(15,785);
+    int 	angle 		   = GetRandomValue(1, 359);
+    float 	radians        = angle * DEG2RAD;
+
     Vector2 direction_ball = { cosf(radians), sinf(radians) };
+    Vector2 position_ball  = { 700.0f, 400.0f };
 
-    Vector2 position_ball = {700.0f, 400.0f};
     while (!WindowShouldClose()){
-        float delta = GetFrameTime();
-
-        float direction_1 = IsKeyDown(KEY_DOWN) - IsKeyDown(KEY_UP);
-        float direction_2 = IsKeyDown(KEY_S) - IsKeyDown(KEY_W);
+        float delta 	   = GetFrameTime();
+        float direction_1  = IsKeyDown(KEY_DOWN) - IsKeyDown(KEY_UP);
+        float direction_2  = IsKeyDown(KEY_S) - IsKeyDown(KEY_W);
 
         position_1.x += 0;
         position_1.y += direction_1 * speed * delta;
 
-        //keeping rect inside window, needs fixing as players are locked
-        if (position_1.x < 0) position_1.x = 0;
-        if (position_1.x + rect_width > screenWidth) position_1.x = screenWidth - rect_width;
-        if (position_1.y < 0) position_1.y = 0;
-        if (position_1.y + rect_height > screenHeight) position_1.y = screenHeight - rect_height;
+        //keeping rect inside window
+        if (position_1.x < 0) 						 	position_1.x = 0;
+        if (position_1.x + rect_width > screenWidth) 	position_1.x = screenWidth - rect_width;
+        if (position_1.y < 0) 							position_1.y = 0;
+        if (position_1.y + rect_height > screenHeight) 	position_1.y = screenHeight - rect_height;
 
 
         position_2.x += 0;
         position_2.y += direction_2 * speed * delta;
 
         //keeping rect inside window
-        if (position_2.x < 0) position_2.x = 0;
-        if (position_2.x + rect_width > screenWidth) position_2.x = screenWidth - rect_width;
-        if (position_2.y < 0) position_2.y = 0;
-        if (position_2.y + rect_height > screenHeight) position_2.y = screenHeight - rect_height;
+        if (position_2.x < 0) 							position_2.x = 0;
+        if (position_2.x + rect_width > screenWidth) 	position_2.x = screenWidth - rect_width;
+        if (position_2.y < 0) 							position_2.y = 0;
+        if (position_2.y + rect_height > screenHeight) 	position_2.y = screenHeight - rect_height;
 
 
-        direction_ball = Vector2Normalize(direction_ball);
+        direction_ball   = Vector2Normalize(direction_ball);
         position_ball.x += direction_ball.x * speed_ball * delta;
         position_ball.y += direction_ball.y * speed_ball * delta;
 
-        //keeping ball inside window
+//==================== start of ball logic --------
         if (position_ball.x < ball_rad){
         position_ball.x = ball_rad;
         direction_ball.x *= -1;
+        speed_ball *= 1.01f;
         }
 
         if (position_ball.x + ball_rad > screenWidth){
         position_ball.x = screenWidth - ball_rad;
         direction_ball.x *= -1;
+        speed_ball *= 1.01f;
         }
 
         if (position_ball.y < ball_rad){
         position_ball.y = ball_rad;
         direction_ball.y *= -1;
+        speed_ball *= 1.01f;
         }
 
         if (position_ball.y + ball_rad > screenHeight){
         position_ball.y = screenHeight - ball_rad;
         direction_ball.y *= -1;
+        speed_ball *= 1.01f;
         }
-
+//==================== end of ball logic --------
         BeginDrawing();
         SetExitKey(KEY_ESCAPE);
         ClearBackground(BLACK);
