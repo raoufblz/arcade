@@ -17,10 +17,10 @@ int main(){
     Vector2 position_1 = { 1350.0f - rect_width, 350.0f };
     Vector2 position_2 = { 50.0f, 350.0f };
 
-    int 	ballpos_y 	   = GetRandomValue(15,785);
-    int 	angle 		   = GetRandomValue(1, 359);
-    float 	radians        = angle * DEG2RAD;
+    int angle = 0;
+    while (angle % 90 == 0) angle = GetRandomValue(1,359);
 
+    float 	radians    	   = angle * DEG2RAD;
     Vector2 direction_ball = { cosf(radians), sinf(radians) };
     Vector2 position_ball  = { 700.0f, 400.0f };
 
@@ -77,14 +77,32 @@ int main(){
         direction_ball.y *= -1;
         speed_ball *= 1.01f;
         }
-//==================== end of ball logic --------
+//==================== end of ball logic (well i thought it was) --------
         BeginDrawing();
         SetExitKey(KEY_ESCAPE);
         ClearBackground(BLACK);
 
-        DrawRectangle((int)position_1.x, (int)position_1.y, rect_width, rect_height, (Color){ 255, 0, 0, 255 });
-        DrawRectangle((int)position_2.x, (int)position_2.y, rect_width, rect_height, (Color){ 0, 0, 255, 255 });
-        DrawCircle((int)position_ball.x, (int)position_ball.y, ball_rad, (Color){ 255, 255, 0, 255 });
+        Rectangle player_1 = { position_1.x, position_1.y, rect_width, rect_height };
+        Rectangle player_2 = { position_2.x, position_2.y, rect_width, rect_height };
+        DrawRectangleRec(player_1, (Color){255, 0, 0, 255});
+        DrawRectangleRec(player_2, (Color){0, 0, 255, 255});
+
+        Vector2 ball_center = { position_ball.x, position_ball.y };
+        float ball_radius = ball_rad;
+        DrawCircleV(ball_center, ball_radius, (Color){ 255, 255, 0, 255 });
+
+
+        if (CheckCollisionCircleRec(ball_center, ball_radius, player_1)){
+            direction_ball.x *= -1;
+            speed_ball *= 1.01f;
+            ball_center.x = player_1.x + player_1.width + ball_radius;
+        }
+
+        if (CheckCollisionCircleRec(ball_center, ball_radius, player_2)){
+            direction_ball.x *= -1;
+	        speed_ball *= 1.01f;
+            position_ball.x = player_2.x + player_2.width + ball_radius;
+        }
 
         EndDrawing();
     }
