@@ -1,12 +1,14 @@
 #include "raylib.h"
 #include "raymath.h"
 #include <cmath>
+#include <cstdio>
 
 int main(){
     const int 	screenWidth   = 1400;
     const int 	screenHeight  = 800;
     const float speed         = 400.0f;
     float 		speed_ball    = 500.0f;
+    float 		max_speed     = 1500.0f;
     const int 	rect_width    = 35;
     const int 	rect_height   = 100;
     const float ball_rad 	  = 30.0f;
@@ -48,7 +50,7 @@ int main(){
         if (position_2.y < 0) 							position_2.y = 0;
         if (position_2.y + rect_height > screenHeight) 	position_2.y = screenHeight - rect_height;
 
-
+        if (speed_ball > max_speed) speed_ball = max_speed;
         direction_ball   = Vector2Normalize(direction_ball);
         position_ball.x += direction_ball.x * speed_ball * delta;
         position_ball.y += direction_ball.y * speed_ball * delta;
@@ -58,24 +60,30 @@ int main(){
         position_ball.x = ball_rad;
         direction_ball.x *= -1;
         speed_ball *= 1.01f;
+        printf("left");
+        if (speed_ball > max_speed) speed_ball = max_speed;
         }
 
         if (position_ball.x + ball_rad > screenWidth){
         position_ball.x = screenWidth - ball_rad;
         direction_ball.x *= -1;
+        printf("right");
         speed_ball *= 1.01f;
+        if (speed_ball > max_speed) speed_ball = max_speed;
         }
 
         if (position_ball.y < ball_rad){
         position_ball.y = ball_rad;
         direction_ball.y *= -1;
         speed_ball *= 1.01f;
+        if (speed_ball > max_speed) speed_ball = max_speed;
         }
 
         if (position_ball.y + ball_rad > screenHeight){
         position_ball.y = screenHeight - ball_rad;
         direction_ball.y *= -1;
         speed_ball *= 1.01f;
+        if (speed_ball > max_speed) speed_ball = max_speed;
         }
 //==================== end of ball logic (well i thought it was) --------
         BeginDrawing();
@@ -95,12 +103,14 @@ int main(){
         if (CheckCollisionCircleRec(ball_center, ball_radius, player_1)){
             direction_ball.x *= -1;
             speed_ball *= 1.01f;
-            ball_center.x = player_1.x + player_1.width + ball_radius;
+            if (speed_ball > max_speed) speed_ball = max_speed;
+            position_ball.x = player_1.x - ball_radius;
         }
 
         if (CheckCollisionCircleRec(ball_center, ball_radius, player_2)){
             direction_ball.x *= -1;
 	        speed_ball *= 1.01f;
+			if (speed_ball > max_speed) speed_ball = max_speed;
             position_ball.x = player_2.x + player_2.width + ball_radius;
         }
 
