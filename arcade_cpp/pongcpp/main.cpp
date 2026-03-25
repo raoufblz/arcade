@@ -1,7 +1,7 @@
 #include "raylib.h"
 #include "raymath.h"
 #include <cmath>
-#include <cstdio>
+// #include <cstdio>
 
 int main(){
     const int 	screenWidth   = 1400;
@@ -12,6 +12,10 @@ int main(){
     const int 	rect_width    = 35;
     const int 	rect_height   = 100;
     const float ball_rad 	  = 30.0f;
+    int 	score_left 	  = 0;
+    int 	score_right  = 0;
+
+    auto capSpeed = [&]() { if (speed_ball > max_speed) speed_ball = max_speed; };
 
     InitWindow(screenWidth, screenHeight, "pong!");
     SetTargetFPS(60);
@@ -60,35 +64,38 @@ int main(){
         position_ball.x = ball_rad;
         direction_ball.x *= -1;
         speed_ball *= 1.01f;
-        printf("left");
-        if (speed_ball > max_speed) speed_ball = max_speed;
+        score_right++;
+        capSpeed();
         }
 
         if (position_ball.x + ball_rad > screenWidth){
         position_ball.x = screenWidth - ball_rad;
         direction_ball.x *= -1;
-        printf("right");
         speed_ball *= 1.01f;
-        if (speed_ball > max_speed) speed_ball = max_speed;
+        score_left++;
+        capSpeed();
         }
 
         if (position_ball.y < ball_rad){
         position_ball.y = ball_rad;
         direction_ball.y *= -1;
         speed_ball *= 1.01f;
-        if (speed_ball > max_speed) speed_ball = max_speed;
+        capSpeed();
         }
 
         if (position_ball.y + ball_rad > screenHeight){
         position_ball.y = screenHeight - ball_rad;
         direction_ball.y *= -1;
         speed_ball *= 1.01f;
-        if (speed_ball > max_speed) speed_ball = max_speed;
+        capSpeed();
         }
 //==================== end of ball logic (well i thought it was) --------
         BeginDrawing();
         SetExitKey(KEY_ESCAPE);
         ClearBackground(BLACK);
+
+        DrawText(TextFormat("%d", score_right), screenWidth - 100, 50, 100, WHITE);
+        DrawText(TextFormat("%d", score_left), 50, 50, 100, WHITE);
 
         Rectangle player_1 = { position_1.x, position_1.y, rect_width, rect_height };
         Rectangle player_2 = { position_2.x, position_2.y, rect_width, rect_height };
@@ -99,18 +106,17 @@ int main(){
         float ball_radius = ball_rad;
         DrawCircleV(ball_center, ball_radius, (Color){ 255, 255, 0, 255 });
 
-
         if (CheckCollisionCircleRec(ball_center, ball_radius, player_1)){
             direction_ball.x *= -1;
             speed_ball *= 1.01f;
-            if (speed_ball > max_speed) speed_ball = max_speed;
+            capSpeed();
             position_ball.x = player_1.x - ball_radius;
         }
 
         if (CheckCollisionCircleRec(ball_center, ball_radius, player_2)){
             direction_ball.x *= -1;
 	        speed_ball *= 1.01f;
-			if (speed_ball > max_speed) speed_ball = max_speed;
+			capSpeed();
             position_ball.x = player_2.x + player_2.width + ball_radius;
         }
 
