@@ -1,7 +1,6 @@
 #include "raylib.h"
 #include "raymath.h"
 #include <cmath>
-// #include <cstdio>
 
 int main(){
     const int 	screenWidth   = 1400;
@@ -35,7 +34,6 @@ int main(){
         float direction_1  = IsKeyDown(KEY_DOWN) - IsKeyDown(KEY_UP);
         float direction_2  = IsKeyDown(KEY_S) - IsKeyDown(KEY_W);
 
-        position_1.x += 0;
         position_1.y += direction_1 * speed * delta;
 
         //keeping rect inside window
@@ -44,8 +42,6 @@ int main(){
         if (position_1.y < 0) 							position_1.y = 0;
         if (position_1.y + rect_height > screenHeight) 	position_1.y = screenHeight - rect_height;
 
-
-        position_2.x += 0;
         position_2.y += direction_2 * speed * delta;
 
         //keeping rect inside window
