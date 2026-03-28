@@ -38,16 +38,12 @@ int main(){
         position_1.y += direction_1 * speed * delta;
 
         //keeping rect inside window
-        if (position_1.x < 0) 						 	position_1.x = 0;
-        if (position_1.x + rect_width > screenWidth) 	position_1.x = screenWidth - rect_width;
         if (position_1.y < 0) 							position_1.y = 0;
         if (position_1.y + rect_height > screenHeight) 	position_1.y = screenHeight - rect_height;
 
         position_2.y += direction_2 * speed * delta;
 
         //keeping rect inside window
-        if (position_2.x < 0) 							position_2.x = 0;
-        if (position_2.x + rect_width > screenWidth) 	position_2.x = screenWidth - rect_width;
         if (position_2.y < 0) 							position_2.y = 0;
         if (position_2.y + rect_height > screenHeight) 	position_2.y = screenHeight - rect_height;
 
@@ -87,20 +83,11 @@ int main(){
         capSpeed();
         }
 //==================== end of ball logic (well i thought it was) --------
-        BeginDrawing();
-        ClearBackground(BLACK);
-
-        DrawText(TextFormat("%d", score_right), screenWidth - 100, 50, 100, WHITE);
-        DrawText(TextFormat("%d", score_left), 50, 50, 100, WHITE);
-
         Rectangle player_1 = { position_1.x, position_1.y, rect_width, rect_height };
         Rectangle player_2 = { position_2.x, position_2.y, rect_width, rect_height };
-        DrawRectangleRec(player_1, (Color){255, 0, 0, 255});
-        DrawRectangleRec(player_2, (Color){0, 0, 255, 255});
 
         Vector2 ball_center = { position_ball.x, position_ball.y };
         float ball_radius = ball_rad;
-        DrawCircleV(ball_center, ball_radius, (Color){ 255, 255, 0, 255 });
 
         if (CheckCollisionCircleRec(ball_center, ball_radius, player_1)){
             direction_ball.x *= -1;
@@ -115,6 +102,17 @@ int main(){
 			capSpeed();
             position_ball.x = player_2.x + player_2.width + ball_radius;
         }
+
+        BeginDrawing();
+        ClearBackground(BLACK);
+
+        DrawText(TextFormat("%d", score_right), screenWidth - 100, 50, 100, WHITE);
+        DrawText(TextFormat("%d", score_left), 50, 50, 100, WHITE);
+
+        DrawRectangleRec(player_1, (Color){255, 0, 0, 255});
+        DrawRectangleRec(player_2, (Color){0, 0, 255, 255});
+
+        DrawCircleV(ball_center, ball_radius, (Color){ 255, 255, 0, 255 });
 
         EndDrawing();
     }
