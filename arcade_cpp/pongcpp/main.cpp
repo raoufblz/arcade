@@ -3,16 +3,16 @@
 #include <cmath>
 
 int main(){
-    const int 	screenWidth   = 1400;
-    const int 	screenHeight  = 800;
-    const float speed         = 400.0f;
-    float 		speed_ball    = 500.0f;
-    float 		max_speed     = 1500.0f;
-    const int 	rect_width    = 35;
-    const int 	rect_height   = 100;
-    const float ball_rad 	  = 30.0f;
-    int 	score_left 	  = 0;
-    int 	score_right  = 0;
+    constexpr int 	screenWidth   = 1400;
+    constexpr int 	screenHeight  = 800;
+    constexpr float speed         = 400.0f;
+    float 			speed_ball    = 500.0f;
+    float 			max_speed     = 1500.0f;
+    constexpr int 	rect_width    = 35;
+    constexpr int 	rect_height   = 100;
+    constexpr float ball_rad 	  = 30.0f;
+    int 			score_left 	  = 0;
+    int 			score_right   = 0;
 
     auto capSpeed = [&]() { if (speed_ball > max_speed) speed_ball = max_speed; };
 
@@ -28,6 +28,7 @@ int main(){
     float 	radians    	   = angle * DEG2RAD;
     Vector2 direction_ball = { cosf(radians), sinf(radians) };
     Vector2 position_ball  = { 700.0f, 400.0f };
+    SetExitKey(KEY_ESCAPE);
 
     while (!WindowShouldClose()){
         float delta 	   = GetFrameTime();
@@ -87,7 +88,6 @@ int main(){
         }
 //==================== end of ball logic (well i thought it was) --------
         BeginDrawing();
-        SetExitKey(KEY_ESCAPE);
         ClearBackground(BLACK);
 
         DrawText(TextFormat("%d", score_right), screenWidth - 100, 50, 100, WHITE);
