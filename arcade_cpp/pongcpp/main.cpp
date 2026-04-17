@@ -22,13 +22,30 @@ int main(){
     Vector2 position_1 = { 1350.0f - rect_width, 350.0f };
     Vector2 position_2 = { 50.0f, 350.0f };
 
-    int angle = 0;
-    while (angle % 90 == 0) angle = GetRandomValue(1,359);
+    int angle;
+    do { angle = GetRandomValue(1, 359); }
+    while (angle % 90 == 0 || (angle > 45 && angle < 135) || (angle > 225 && angle < 315));
+
 
     float 	radians    	   = angle * DEG2RAD;
     Vector2 direction_ball = { cosf(radians), sinf(radians) };
     Vector2 position_ball  = { 700.0f, 400.0f };
     SetExitKey(KEY_ESCAPE);
+
+    auto reset_ball = [&]() {
+        position_ball = { screenWidth / 2.0f, screenHeight / 2.0f };
+        speed_ball = 500.0f;
+
+        int angle;
+        do { angle = GetRandomValue(1, 359); }
+        while (angle % 90 == 0 || (angle > 45 && angle < 135) || (angle > 225 && angle < 315));
+
+        float radians = angle * DEG2RAD;
+        direction_ball = { cosf(radians), sinf(radians) };
+        // Ensure ball goes toward a random player
+        if (GetRandomValue(0, 1)) direction_ball.x *= -1;
+    };
+
 
     while (!WindowShouldClose()){
         float delta 	   = GetFrameTime();
@@ -58,6 +75,7 @@ int main(){
         direction_ball.x *= -1;
         speed_ball *= 1.01f;
         score_right++;
+        reset_ball();
         capSpeed();
         }
 
@@ -66,6 +84,7 @@ int main(){
         direction_ball.x *= -1;
         speed_ball *= 1.01f;
         score_left++;
+        reset_ball();
         capSpeed();
         }
 
