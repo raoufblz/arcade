@@ -7,29 +7,30 @@ int main(){
     constexpr int 	screenHeight  = 800;
     constexpr float speed         = 400.0f;
     float 			speed_ball    = 500.0f;
-    float 			max_speed     = 1500.0f;
+    constexpr float max_speed     = 2000.0f;
     constexpr int 	rect_width    = 35;
     constexpr int 	rect_height   = 100;
     constexpr float ball_rad 	  = 30.0f;
-    int 			score_left 	  = 0;
-    int 			score_right   = 0;
+    int 			score_right 	  = 0;
+    int 			score_left   = 0;
+    constexpr float paddle_offset = 50.0f;
 
     auto capSpeed = [&]() { if (speed_ball > max_speed) speed_ball = max_speed; };
 
     InitWindow(screenWidth, screenHeight, "pong!");
-    SetTargetFPS(60);
+    SetTargetFPS(90);
 
-    Vector2 position_1 = { 1350.0f - rect_width, 350.0f };
-    Vector2 position_2 = { 50.0f, 350.0f };
+    Vector2 position_pdl_right = { screenWidth - paddle_offset - rect_width, (screenHeight - rect_height) / 2.0f };
+    Vector2 position_pdl_left = { paddle_offset, (screenHeight - rect_height) / 2.0f };
 
     int angle;
     do { angle = GetRandomValue(1, 359); }
-    while (angle % 90 == 0 || (angle > 45 && angle < 135) || (angle > 225 && angle < 315));
+    while (angle % 90 == 0 || (angle > 75 && angle < 105) || (angle > 255 && angle < 285));
 
 
     float 	radians    	   = angle * DEG2RAD;
     Vector2 direction_ball = { cosf(radians), sinf(radians) };
-    Vector2 position_ball  = { 700.0f, 400.0f };
+    Vector2 position_ball  = { screenWidth / 2.0f, screenHeight / 2.0f };
     SetExitKey(KEY_ESCAPE);
 
     auto reset_ball = [&]() {
@@ -38,7 +39,7 @@ int main(){
 
         int angle;
         do { angle = GetRandomValue(1, 359); }
-        while (angle % 90 == 0 || (angle > 45 && angle < 135) || (angle > 225 && angle < 315));
+        while (angle % 90 == 0 || (angle > 75 && angle < 105) || (angle > 255 && angle < 285));
 
         float radians = angle * DEG2RAD;
         direction_ball = { cosf(radians), sinf(radians) };
@@ -49,20 +50,20 @@ int main(){
 
     while (!WindowShouldClose()){
         float delta 	   = GetFrameTime();
-        float direction_1  = IsKeyDown(KEY_DOWN) - IsKeyDown(KEY_UP);
-        float direction_2  = IsKeyDown(KEY_S) - IsKeyDown(KEY_W);
+        float direction_pdl_right  = IsKeyDown(KEY_DOWN) - IsKeyDown(KEY_UP);
+        float direction_pdl_left  = IsKeyDown(KEY_S) - IsKeyDown(KEY_W);
 
-        position_1.y += direction_1 * speed * delta;
-
-        //keeping rect inside window
-        if (position_1.y < 0) 							position_1.y = 0;
-        if (position_1.y + rect_height > screenHeight) 	position_1.y = screenHeight - rect_height;
-
-        position_2.y += direction_2 * speed * delta;
+        position_pdl_right.y += direction_pdl_right * speed * delta;
 
         //keeping rect inside window
-        if (position_2.y < 0) 							position_2.y = 0;
-        if (position_2.y + rect_height > screenHeight) 	position_2.y = screenHeight - rect_height;
+        if (position_pdl_right.y < 0) 							position_pdl_right.y = 0;
+        if (position_pdl_right.y + rect_height > screenHeight) 	position_pdl_right.y = screenHeight - rect_height;
+
+        position_pdl_left.y += direction_pdl_left * speed * delta;
+
+        //keeping rect inside window
+        if (position_pdl_left.y < 0) 							position_pdl_left.y = 0;
+        if (position_pdl_left.y + rect_height > screenHeight) 	position_pdl_left.y = screenHeight - rect_height;
 
         if (speed_ball > max_speed) speed_ball = max_speed;
         direction_ball   = Vector2Normalize(direction_ball);
@@ -72,20 +73,14 @@ int main(){
 //==================== start of ball logic --------
         if (position_ball.x < ball_rad){
         position_ball.x = ball_rad;
-        direction_ball.x *= -1;
-        speed_ball *= 1.01f;
         score_right++;
         reset_ball();
-        capSpeed();
         }
 
         if (position_ball.x + ball_rad > screenWidth){
         position_ball.x = screenWidth - ball_rad;
-        direction_ball.x *= -1;
-        speed_ball *= 1.01f;
         score_left++;
         reset_ball();
-        capSpeed();
         }
 
         if (position_ball.y < ball_rad){
@@ -102,24 +97,24 @@ int main(){
         capSpeed();
         }
 //==================== end of ball logic (well i thought it was) --------
-        Rectangle player_1 = { position_1.x, position_1.y, rect_width, rect_height };
-        Rectangle player_2 = { position_2.x, position_2.y, rect_width, rect_height };
+        Rectangle player_right = { position_pdl_right.x, position_pdl_right.y, rect_width, rect_height };
+        Rectangle player_left = { position_pdl_left.x, position_pdl_left.y, rect_width, rect_height };
 
         Vector2 ball_center = { position_ball.x, position_ball.y };
         float ball_radius = ball_rad;
 
-        if (CheckCollisionCircleRec(ball_center, ball_radius, player_1)){
+        if (CheckCollisionCircleRec(ball_center, ball_radius, player_right)){
             direction_ball.x *= -1;
             speed_ball *= 1.01f;
             capSpeed();
-            position_ball.x = player_1.x - ball_radius;
+            position_ball.x = player_right.x - ball_radius;
         }
 
-        if (CheckCollisionCircleRec(ball_center, ball_radius, player_2)){
+        if (CheckCollisionCircleRec(ball_center, ball_radius, player_left)){
             direction_ball.x *= -1;
 	        speed_ball *= 1.01f;
 			capSpeed();
-            position_ball.x = player_2.x + player_2.width + ball_radius;
+            position_ball.x = player_left.x + player_left.width + ball_radius;
         }
 
         BeginDrawing();
@@ -128,8 +123,8 @@ int main(){
         DrawText(TextFormat("%d", score_right), screenWidth - 100, 50, 100, WHITE);
         DrawText(TextFormat("%d", score_left), 50, 50, 100, WHITE);
 
-        DrawRectangleRec(player_1, (Color){255, 0, 0, 255});
-        DrawRectangleRec(player_2, (Color){0, 0, 255, 255});
+        DrawRectangleRec(player_right, (Color){255, 0, 0, 255});
+        DrawRectangleRec(player_left, (Color){0, 0, 255, 255});
 
         DrawCircleV(ball_center, ball_radius, (Color){ 255, 255, 0, 255 });
 
