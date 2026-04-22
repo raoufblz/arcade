@@ -7,12 +7,12 @@ int main(){
     constexpr int 	screenHeight  = 800;
     constexpr float speed         = 400.0f;
     float 			speed_ball    = 500.0f;
-    constexpr float max_speed     = 2000.0f;
+    constexpr float max_speed     = 1500.0f;
     constexpr int 	rect_width    = 35;
     constexpr int 	rect_height   = 100;
     constexpr float ball_rad 	  = 30.0f;
-    int 			score_right 	  = 0;
-    int 			score_left   = 0;
+    int 			score_right   = 0;
+    int 			score_left    = 0;
     constexpr float paddle_offset = 50.0f;
 
     auto capSpeed = [&]() { if (speed_ball > max_speed) speed_ball = max_speed; };
@@ -65,8 +65,8 @@ int main(){
         if (position_pdl_left.y < 0) 							position_pdl_left.y = 0;
         if (position_pdl_left.y + rect_height > screenHeight) 	position_pdl_left.y = screenHeight - rect_height;
 
-        if (speed_ball > max_speed) speed_ball = max_speed;
-        direction_ball   = Vector2Normalize(direction_ball);
+        capSpeed();
+        // direction_ball   = Vector2Normalize(direction_ball);  // i think i ll need this
         position_ball.x += direction_ball.x * speed_ball * delta;
         position_ball.y += direction_ball.y * speed_ball * delta;
 
