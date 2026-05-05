@@ -3,8 +3,8 @@
 #include <cmath>
 
 int main(){
-    constexpr int 	screenWidth   = 1400;
-    constexpr int 	screenHeight  = 800;
+    constexpr int 	screenWidth   = 1600;
+    constexpr int 	screenHeight  = 900;
     constexpr float speed         = 400.0f;
     float 			speed_ball    = 500.0f;
     constexpr float max_speed     = 1500.0f;
@@ -119,6 +119,7 @@ int main(){
 
         BeginDrawing();
         ClearBackground(BLACK);
+		DrawFPS(10, 10);
 
         DrawText(TextFormat("%d", score_right), screenWidth - 100, 50, 100, WHITE);
         DrawText(TextFormat("%d", score_left), 50, 50, 100, WHITE);
