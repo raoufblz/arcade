@@ -20,7 +20,7 @@ fn main() {
         .build();
 
     let mut angle = 0;
-    while angle % 90 == 0 {angle = rl.get_random_value(1..360);}
+    while angle % 90 == 0 || (angle > 75 && angle < 105) || (angle > 255 && angle < 285) {angle = rl.get_random_value(1..360);}
     let radians: f32 = angle as f32 * DEG2RAD as f32;
     let mut direction_ball = Vector2 { x: radians.cos(), y: radians.sin() };
 
@@ -29,7 +29,13 @@ fn main() {
     let mut position_pdl_left = Vector2 { x: PADDLE_OFFSET, y: (SCREEN_HEIGHT - RECT_HEIGHT)/2.0 };
 
 
-    let mut position_ball = Vector2 { x: 700.0, y: 400.0 };
+    let mut position_ball = Vector2 { x: (SCREEN_WIDTH - BALL_RAD)/ 2.0 , y: (SCREEN_HEIGHT - BALL_RAD)/ 2.0 };
+
+    fn cap_speed(speed: &mut f32, max_speed: f32) {
+        if *speed > max_speed {
+            *speed = max_speed;
+        }
+    }
 
     while !rl.window_should_close() {
 
@@ -43,14 +49,13 @@ fn main() {
         if position_pdl_right.y < 0.0 						  {position_pdl_right.y = 0.0;}
         if position_pdl_right.y + RECT_HEIGHT > SCREEN_HEIGHT {position_pdl_right.y =SCREEN_HEIGHT - RECT_HEIGHT;}
 
-
         position_pdl_left.y += direction_2 as f32 * SPEED * delta;
 
         //keeping rect inside window
         if position_pdl_left.y < 0.0 						  {position_pdl_left.y = 0.0;}
-        if position_pdl_left.y + RECT_HEIGHT > SCREEN_HEIGHT {position_pdl_left.y = SCREEN_HEIGHT - RECT_HEIGHT;}
+        if position_pdl_left.y + RECT_HEIGHT > SCREEN_HEIGHT  {position_pdl_left.y = SCREEN_HEIGHT - RECT_HEIGHT;}
 
-        if speed_ball > MAX_SPEED {speed_ball = MAX_SPEED;}
+        cap_speed(&mut speed_ball, MAX_SPEED);
         position_ball.x += direction_ball.x * speed_ball * delta;
         position_ball.y += direction_ball.y * speed_ball * delta;
 
@@ -58,34 +63,31 @@ fn main() {
         if position_ball.x < BALL_RAD{
         position_ball.x = BALL_RAD;
         direction_ball.x *= -1.0;
-        speed_ball *= 1.01;
         score_right += 1;
-        if speed_ball > MAX_SPEED { speed_ball = MAX_SPEED; }
+        cap_speed(&mut speed_ball, MAX_SPEED);
         }
 
         if position_ball.x + BALL_RAD > SCREEN_WIDTH {
         position_ball.x = SCREEN_WIDTH - BALL_RAD;
         direction_ball.x *= -1.0;
-        speed_ball *= 1.01;
         score_left += 1;
-        if speed_ball > MAX_SPEED { speed_ball = MAX_SPEED; }
+        cap_speed(&mut speed_ball, MAX_SPEED);
         }
 
         if position_ball.y < BALL_RAD{
         position_ball.y = BALL_RAD;
         direction_ball.y *= -1.0;
         speed_ball *= 1.01;
-        if speed_ball > MAX_SPEED { speed_ball = MAX_SPEED; }
+        cap_speed(&mut speed_ball, MAX_SPEED);
         }
 
         if position_ball.y + BALL_RAD > SCREEN_HEIGHT {
         position_ball.y = SCREEN_HEIGHT - BALL_RAD;
         direction_ball.y *= -1.0;
         speed_ball *= 1.01;
-        if speed_ball > MAX_SPEED { speed_ball = MAX_SPEED; }
+        cap_speed(&mut speed_ball, MAX_SPEED);
         }
 //==================== end of ball logic (well i thought it was) --------
-
 
         let mut d = rl.begin_drawing(&thread);
         d.clear_background(Color::BLACK);
