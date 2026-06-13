@@ -72,29 +72,27 @@ int main(){
 
 //==================== start of ball logic --------
         if (position_ball.x < ball_rad){
-        position_ball.x = ball_rad;
-        score_right++;
-        reset_ball();
+        	score_right++;
+        	reset_ball();
         }
 
         if (position_ball.x + ball_rad > screenWidth){
-        position_ball.x = screenWidth - ball_rad;
-        score_left++;
-        reset_ball();
+        	score_left++;
+        	reset_ball();
         }
 
         if (position_ball.y < ball_rad){
-        position_ball.y = ball_rad;
-        direction_ball.y *= -1;
-        speed_ball *= 1.01f;
-        capSpeed();
+        	position_ball.y = ball_rad;
+        	direction_ball.y *= -1;
+        	speed_ball *= 1.01f;
+        	capSpeed();
         }
 
         if (position_ball.y + ball_rad > screenHeight){
-        position_ball.y = screenHeight - ball_rad;
-        direction_ball.y *= -1;
-        speed_ball *= 1.01f;
-        capSpeed();
+        	position_ball.y = screenHeight - ball_rad;
+        	direction_ball.y *= -1;
+        	speed_ball *= 1.01f;
+        	capSpeed();
         }
 //==================== end of ball logic (well i thought it was) --------
         Rectangle player_right = { position_pdl_right.x, position_pdl_right.y, rect_width, rect_height };
