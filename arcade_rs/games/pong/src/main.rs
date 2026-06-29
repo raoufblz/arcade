@@ -1,72 +1,130 @@
 use raylib::consts::DEG2RAD;
 use raylib::prelude::*;
 
+const SCREEN_WIDTH		: f32 = 1600.0;
+const SCREEN_HEIGHT		: f32 = 900.0;
+const PADDLE_SPEED		: f32 = 400.0;
+const BALL_SPEED		: f32 = 500.0;
+const MAX_SPEED			: f32 = 1500.0;
+const RECT_WIDTH		: f32 = 35.0;
+const RECT_HEIGHT		: f32 = 100.0;
+const BALL_RAD			: f32 = 30.0;
+const PADDLE_OFFSET		: f32 = 50.0;
+const SPEED_INCREMENT	: f32 = 1.01;
+
 #[derive(PartialEq)]
 enum GameState {
     Playing,
     Paused,
 }
 
-fn main() {
-	const 	SCREEN_WIDTH	:f32   	= 1600.0;
-	const 	SCREEN_HEIGHT	:f32  	= 900.0;
-	const 	SPEED 			:f32   	= 400.0;
-	let mut speed_ball		:f32  	= 500.0;
-	const   MAX_SPEED		:f32  	= 1500.0;
-	const 	RECT_WIDTH    	:f32	= 35.0;
-	const 	RECT_HEIGHT    	:f32	= 100.0;
-	const 	BALL_RAD    	:f32	= 30.0;
-	let mut score_left		:i32	= 0;
-	let mut score_right		:i32	= 0;
-	const 	PADDLE_OFFSET   :f32	= 50.0;
+struct Paddle {
+    pub position: Vector2,
+    pub width: f32,
+    pub height: f32,
+    pub speed: f32,
+}
 
-    let (mut rl, thread) = raylib::init()
-        .size(SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32)
-        .title("Pong")
-        .build();
-
-    let mut angle = 0;
-    while angle % 90 == 0 || (angle > 75 && angle < 105) || (angle > 255 && angle < 285) {
-        angle = rl.get_random_value(1..360);
-    }
-    let radians: f32 = angle as f32 * DEG2RAD as f32;
-    let mut direction_ball = Vector2::new(radians.cos(), radians.sin());
-
-    rl.set_target_fps(90);
-    let mut position_pdl_right = Vector2::new(SCREEN_WIDTH - PADDLE_OFFSET - RECT_WIDTH,
-    										 (SCREEN_HEIGHT - RECT_HEIGHT)/2.0);
-    let mut position_pdl_left = Vector2::new(PADDLE_OFFSET,
-    										(SCREEN_HEIGHT - RECT_HEIGHT)/2.0);
-
-    let mut position_ball = Vector2::new(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0);
-
-    fn cap_speed(speed: &mut f32, max_speed: f32) {
-        if *speed > max_speed {
-            *speed = max_speed;
+impl Paddle {
+    pub fn new(x: f32, y: f32) -> Self {
+        Self {
+            position: Vector2::new(x, y),
+            width: RECT_WIDTH,
+            height: RECT_HEIGHT,
+            speed: PADDLE_SPEED,
         }
     }
 
-    fn reset_ball(
-        rl: &mut RaylibHandle,
-        pos: &mut Vector2,
-        speed: &mut f32,
-        dir: &mut Vector2,
-        screen_w: f32,
-        screen_h: f32,
-    ) {
-        *pos = Vector2::new(screen_w / 2.0, screen_h / 2.0);
-        *speed = 500.0;
+    pub fn update(&mut self, direction: i32, delta: f32) {
+        self.position.y += direction as f32 * self.speed * delta;
+        self.position.y = self.position.y.clamp(0.0, SCREEN_HEIGHT - self.height);
+    }
+
+    pub fn reset(&mut self, x: f32, y: f32) {
+        self.position = Vector2::new(x, y);
+    }
+
+    pub fn get_rect(&self) -> Rectangle {
+        Rectangle::new(self.position.x, self.position.y, self.width, self.height)
+    }
+
+    pub fn draw(&self, d: &mut RaylibDrawHandle, color: Color) {
+        d.draw_rectangle_rec(self.get_rect(), color);
+    }
+}
+
+struct Ball {
+    pub position: Vector2,
+    pub direction: Vector2,
+    pub speed: f32,
+    pub radius: f32,
+}
+
+impl Ball {
+    pub fn new(position: Vector2, direction: Vector2) -> Self {
+        Self {
+            position,
+            direction,
+            speed: BALL_SPEED,
+            radius: BALL_RAD,
+        }
+    }
+
+    pub fn update(&mut self, delta: f32) {
+        self.position.x += self.direction.x * self.speed * delta;
+        self.position.y += self.direction.y * self.speed * delta;
+    }
+
+    pub fn reset(&mut self, rl: &mut RaylibHandle) {
+        self.position = Vector2::new(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0);
+        self.speed = BALL_SPEED;
 
         let mut angle = 0;
         while angle % 90 == 0 || (angle > 75 && angle < 105) || (angle > 255 && angle < 285) {
             angle = rl.get_random_value(1..360);
         }
         let radians: f32 = (angle as f32) * DEG2RAD as f32;
-
-        *dir = Vector2::new(radians.cos(), radians.sin());
+        self.direction = Vector2::new(radians.cos(), radians.sin());
     }
 
+    pub fn cap_speed(&mut self) {
+        if self.speed > MAX_SPEED {
+            self.speed = MAX_SPEED;
+        }
+    }
+
+    pub fn draw(&self, d: &mut RaylibDrawHandle) {
+        d.draw_circle_v(self.position, self.radius, Color::new(255, 255, 0, 255));
+    }
+}
+
+fn main() {
+    let mut score_left: i32 = 0;
+    let mut score_right: i32 = 0;
     let mut state = GameState::Playing;
+
+    let (mut rl, thread) = raylib::init()
+        .size(SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32)
+        .title("Pong")
+        .build();
+
+    // ---- Create paddles ----
+    let mut left_paddle = Paddle::new(PADDLE_OFFSET, (SCREEN_HEIGHT - RECT_HEIGHT) / 2.0);
+    let mut right_paddle = Paddle::new(
+        SCREEN_WIDTH - PADDLE_OFFSET - RECT_WIDTH,
+        (SCREEN_HEIGHT - RECT_HEIGHT) / 2.0,
+    );
+
+    // ---- create ball with random initial direction ----
+    let mut angle = 0;
+    while angle % 90 == 0 || (angle > 75 && angle < 105) || (angle > 255 && angle < 285) {
+        angle = rl.get_random_value(1..360);
+    }
+    let radians: f32 = angle as f32 * DEG2RAD as f32;
+    let direction = Vector2::new(radians.cos(), radians.sin());
+    let mut ball = Ball::new(Vector2::new(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0), direction);
+
+    rl.set_target_fps(90);
 
     while !rl.window_should_close() {
         // ---- input handling ----
@@ -76,26 +134,16 @@ fn main() {
                 GameState::Paused => GameState::Playing,
             };
         }
+
         if rl.is_key_pressed(KeyboardKey::KEY_R) {
-            // reset scores, paddles, ball, and go to Playing
             score_left = 0;
             score_right = 0;
-            position_pdl_right = Vector2::new(
+            left_paddle.reset(PADDLE_OFFSET, (SCREEN_HEIGHT - RECT_HEIGHT) / 2.0);
+            right_paddle.reset(
                 SCREEN_WIDTH - PADDLE_OFFSET - RECT_WIDTH,
                 (SCREEN_HEIGHT - RECT_HEIGHT) / 2.0,
             );
-            position_pdl_left = Vector2::new(
-                PADDLE_OFFSET,
-                (SCREEN_HEIGHT - RECT_HEIGHT) / 2.0,
-            );
-            reset_ball(
-                &mut rl,
-                &mut position_ball,
-                &mut speed_ball,
-                &mut direction_ball,
-                SCREEN_WIDTH,
-                SCREEN_HEIGHT,
-            );
+            ball.reset(&mut rl);
             state = GameState::Playing;
         }
 
@@ -103,101 +151,64 @@ fn main() {
 
         // ---- update only if Playing ----
         if state == GameState::Playing {
-            let direction_1: i32 =
+            // ---- Input ----
+            let dir_right: i32 =
                 rl.is_key_down(KeyboardKey::KEY_DOWN) as i32 - rl.is_key_down(KeyboardKey::KEY_UP) as i32;
-            let direction_2: i32 =
+            let dir_left: i32 =
                 rl.is_key_down(KeyboardKey::KEY_S) as i32 - rl.is_key_down(KeyboardKey::KEY_W) as i32;
 
-            // move right paddle
-            position_pdl_right.y += direction_1 as f32 * SPEED * delta;
-            if position_pdl_right.y < 0.0 {
-                position_pdl_right.y = 0.0;
-            }
-            if position_pdl_right.y + RECT_HEIGHT > SCREEN_HEIGHT {
-                position_pdl_right.y = SCREEN_HEIGHT - RECT_HEIGHT;
-            }
+            // ---- Update paddles ----
+            right_paddle.update(dir_right, delta);
+            left_paddle.update(dir_left, delta);
 
-            // move left paddle
-            position_pdl_left.y += direction_2 as f32 * SPEED * delta;
-            if position_pdl_left.y < 0.0 {
-                position_pdl_left.y = 0.0;
-            }
-            if position_pdl_left.y + RECT_HEIGHT > SCREEN_HEIGHT {
-                position_pdl_left.y = SCREEN_HEIGHT - RECT_HEIGHT;
-            }
+            // ---- Update ball ----
+            ball.update(delta);
+            ball.cap_speed();
 
-            cap_speed(&mut speed_ball, MAX_SPEED);
-            position_ball.x += direction_ball.x * speed_ball * delta;
-            position_ball.y += direction_ball.y * speed_ball * delta;
-
-            // ---- ball wall collisions ----
+            // ---- Ball wall collisions ----
             // left wall => right player scores
-            if position_ball.x < BALL_RAD {
+            if ball.position.x < ball.radius {
                 score_right += 1;
-                reset_ball(
-                    &mut rl,
-                    &mut position_ball,
-                    &mut speed_ball,
-                    &mut direction_ball,
-                    SCREEN_WIDTH,
-                    SCREEN_HEIGHT,
-                );
+                ball.reset(&mut rl);
             }
             // right wall => left player scores
-            if position_ball.x + BALL_RAD > SCREEN_WIDTH {
+            if ball.position.x + ball.radius > SCREEN_WIDTH {
                 score_left += 1;
-                reset_ball(
-                    &mut rl,
-                    &mut position_ball,
-                    &mut speed_ball,
-                    &mut direction_ball,
-                    SCREEN_WIDTH,
-                    SCREEN_HEIGHT,
-                );
+                ball.reset(&mut rl);
             }
-            // top wall
-            if position_ball.y < BALL_RAD {
-                position_ball.y = BALL_RAD;
-                direction_ball.y *= -1.0;
-                speed_ball *= 1.01;
-                cap_speed(&mut speed_ball, MAX_SPEED);
+            // Top wall
+            if ball.position.y < ball.radius {
+                ball.position.y = ball.radius;
+                ball.direction.y *= -1.0;
+                ball.speed *= SPEED_INCREMENT;
+                ball.cap_speed();
             }
-            // bottom wall
-            if position_ball.y + BALL_RAD > SCREEN_HEIGHT {
-                position_ball.y = SCREEN_HEIGHT - BALL_RAD;
-                direction_ball.y *= -1.0;
-                speed_ball *= 1.01;
-                cap_speed(&mut speed_ball, MAX_SPEED);
+            // Bottom wall
+            if ball.position.y + ball.radius > SCREEN_HEIGHT {
+                ball.position.y = SCREEN_HEIGHT - ball.radius;
+                ball.direction.y *= -1.0;
+                ball.speed *= SPEED_INCREMENT;
+                ball.cap_speed();
             }
 
             // ---- paddle collisions ----
-            let player_1 = Rectangle::new(
-                position_pdl_right.x,
-                position_pdl_right.y,
-                RECT_WIDTH,
-                RECT_HEIGHT,
-            );
-            let player_2 = Rectangle::new(
-                position_pdl_left.x,
-                position_pdl_left.y,
-                RECT_WIDTH,
-                RECT_HEIGHT,
-            );
-            let ball_center = Vector2::new(position_ball.x, position_ball.y);
-            let ball_radius = BALL_RAD;
+            let ball_center = ball.position;
+            let ball_radius = ball.radius;
 
-            if player_1.check_collision_circle_rec(ball_center, ball_radius) {
-                direction_ball.x *= -1.0;
-                speed_ball *= 1.01;
-                cap_speed(&mut speed_ball, MAX_SPEED);
-                position_ball.x = player_1.x - ball_radius;
+            // Right paddle
+            if right_paddle.get_rect().check_collision_circle_rec(ball_center, ball_radius) {
+                ball.direction.x *= -1.0;
+                ball.speed *= SPEED_INCREMENT;
+                ball.cap_speed();
+                ball.position.x = right_paddle.position.x - ball_radius;
             }
 
-            if player_2.check_collision_circle_rec(ball_center, ball_radius) {
-                direction_ball.x *= -1.0;
-                speed_ball *= 1.01;
-                cap_speed(&mut speed_ball, MAX_SPEED);
-                position_ball.x = player_2.x + player_2.width + ball_radius;
+            // Left paddle
+            if left_paddle.get_rect().check_collision_circle_rec(ball_center, ball_radius) {
+                ball.direction.x *= -1.0;
+                ball.speed *= SPEED_INCREMENT;
+                ball.cap_speed();
+                ball.position.x = left_paddle.position.x + left_paddle.width + ball_radius;
             }
         } // end of Playing update
 
@@ -209,25 +220,12 @@ fn main() {
         d.draw_text(&score_right.to_string(), SCREEN_WIDTH as i32 - 100, 50, 100, Color::WHITE);
         d.draw_text(&score_left.to_string(), 50, 50, 100, Color::WHITE);
 
-        // paddles
-        let player_1 = Rectangle::new(
-            position_pdl_right.x,
-            position_pdl_right.y,
-            RECT_WIDTH,
-            RECT_HEIGHT,
-        );
-        let player_2 = Rectangle::new(
-            position_pdl_left.x,
-            position_pdl_left.y,
-            RECT_WIDTH,
-            RECT_HEIGHT,
-        );
-        d.draw_rectangle_rec(player_1, Color::RED);
-        d.draw_rectangle_rec(player_2, Color::BLUE);
+        // Paddles
+        right_paddle.draw(&mut d, Color::RED);
+        left_paddle.draw(&mut d, Color::BLUE);
 
-        // ball
-        let ball_center = Vector2::new(position_ball.x, position_ball.y);
-        d.draw_circle_v(ball_center, BALL_RAD, Color::new(255, 255, 0, 255));
+        // Ball
+        ball.draw(&mut d);
 
         d.draw_fps(10, 10);
 
