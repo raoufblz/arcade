@@ -85,9 +85,10 @@ impl Ball {
         self.speed = BALL_SPEED;
 
         let mut angle = 0;
-        while angle % 90 == 0 || (angle > 75 && angle < 105) || (angle > 255 && angle < 285) {
-            angle = rl.get_random_value(1..360);
+        while angle % 90 == 0 {
+            angle = rl.get_random_value(15..165);
         }
+
         let radians: f32 = (angle as f32) * DEG2RAD as f32;
         self.direction = Vector2::new(radians.cos(), radians.sin());
     }
@@ -157,7 +158,7 @@ fn main() {
         .build();
 
     rl.set_target_fps(90);
-    let mut _game_state = GameState::Playing;
+    let mut game_state = GameState::Playing;
 
     let start_pos = Vector2::new((SCREEN_WIDTH - PADDLE_WIDTH) / 2.0, 700.0);
 
@@ -177,59 +178,75 @@ fn main() {
     rl.set_target_fps(90);
     while !rl.window_should_close() {
 
+	   	if rl.is_key_pressed(KeyboardKey::KEY_P) {
+                game_state = match game_state {
+                    GameState::Playing => GameState::Paused,
+                    GameState::Paused => GameState::Playing,
+                };
+            }
+
+            if rl.is_key_pressed(KeyboardKey::KEY_R) {
+                paddle.reset((SCREEN_WIDTH - PADDLE_WIDTH) / 2.0, 700.0);
+                ball.reset(&mut rl);
+                game_state = GameState::Playing;
+            }
+
     	let delta: f32 = rl.get_frame_time();
-	    let paddle_direction :i32 = rl.is_key_down(KeyboardKey::KEY_RIGHT) as i32
-								- rl.is_key_down(KeyboardKey::KEY_LEFT) as i32;
 
-        paddle.update(paddle_direction, delta, SCREEN_WIDTH);
+     	if game_state == GameState::Playing {
+		    let paddle_direction :i32 = rl.is_key_down(KeyboardKey::KEY_RIGHT) as i32
+									- rl.is_key_down(KeyboardKey::KEY_LEFT) as i32;
 
-        // ----- experimental -----
-        ball.update(delta);
-        ball.cap_speed();
+	        paddle.update(paddle_direction, delta, SCREEN_WIDTH);
 
-        // ---- Ball wall collisions ----
-        // left wall
-        if ball.position.x < ball.radius {
-	        ball.position.x = ball.radius;
-            ball.direction.x *= -1.0;
-            ball.speed *= SPEED_INCREMENT;
-            ball.cap_speed();
-        }
-        // right wall
-        if ball.position.x + ball.radius > SCREEN_WIDTH {
-	        ball.position.x = SCREEN_WIDTH - ball.radius;
-            ball.direction.x *= -1.0;
-            ball.speed *= SPEED_INCREMENT;
-            ball.cap_speed();
-        }
-        // Top wall
-        if ball.position.y < ball.radius {
-            ball.position.y = ball.radius;
-            ball.direction.y *= -1.0;
-            ball.speed *= SPEED_INCREMENT;
-            ball.cap_speed();
-        }
-        // Bottom wall
-        if ball.position.y + ball.radius > SCREEN_HEIGHT {
-            ball.position.y = SCREEN_HEIGHT - ball.radius;
-            ball.direction.y *= -1.0;
-            ball.speed *= SPEED_INCREMENT;
-            ball.cap_speed();
-        }
+	        // ----- experimental -----
+	        ball.update(delta);
+	        ball.cap_speed();
 
-        // ---- paddle collisions ----
-        let ball_center = ball.position;
-        let ball_radius = ball.radius;
+	        // ---- Ball wall collisions ----
+	        // left wall
+	        if ball.position.x < ball.radius {
+		        ball.position.x = ball.radius;
+	            ball.direction.x *= -1.0;
+	            ball.speed *= SPEED_INCREMENT;
+	            ball.cap_speed();
+	        }
+	        // right wall
+	        if ball.position.x + ball.radius > SCREEN_WIDTH {
+		        ball.position.x = SCREEN_WIDTH - ball.radius;
+	            ball.direction.x *= -1.0;
+	            ball.speed *= SPEED_INCREMENT;
+	            ball.cap_speed();
+	        }
+	        // Top wall
+	        if ball.position.y < ball.radius {
+	            ball.position.y = ball.radius;
+	            ball.direction.y *= -1.0;
+	            ball.speed *= SPEED_INCREMENT;
+	            ball.cap_speed();
+	        }
+	        // Bottom wall
+	        if ball.position.y + ball.radius > SCREEN_HEIGHT {
+	            ball.position.y = SCREEN_HEIGHT - ball.radius;
+	            ball.direction.y *= -1.0;
+	            ball.speed *= SPEED_INCREMENT;
+	            ball.cap_speed();
+	        }
 
-        // paddle
-        if paddle.get_rect().check_collision_circle_rec(ball_center, ball_radius) {
-            ball.direction.y *= -1.0;
-            ball.speed *= SPEED_INCREMENT;
-            ball.cap_speed();
-            ball.position.y = paddle.position.y - ball_radius;
-        }
+	        // ---- paddle collisions ----
+	        let ball_center = ball.position;
+	        let ball_radius = ball.radius;
 
-        // ----- end of experimental -----
+	        // paddle
+	        if paddle.get_rect().check_collision_circle_rec(ball_center, ball_radius) {
+	            ball.direction.y *= -1.0;
+	            ball.speed *= SPEED_INCREMENT;
+	            ball.cap_speed();
+	            ball.position.y = paddle.position.y - ball_radius;
+	        }
+
+	        // ----- end of experimental -----
+      	}
 
         // ----- drawing -----
         let mut d = rl.begin_drawing(&thread);
@@ -238,6 +255,23 @@ fn main() {
         paddle.draw(&mut d, Color::new(255, 0, 0, 255));
         ball.draw(&mut d);
 
-
+        // Pause overlay
+                if game_state == GameState::Paused {
+                    d.draw_rectangle(0, 0, SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32, Color::new(0, 0, 0, 100));
+                    d.draw_text(
+                        "PAUSED",
+                        (SCREEN_WIDTH / 2.0 - 140.0) as i32,
+                        (SCREEN_HEIGHT / 2.0 - 40.0) as i32,
+                        80,
+                        Color::WHITE,
+                    );
+                    d.draw_text(
+                        "Press P to resume, R to restart",
+                        (SCREEN_WIDTH / 2.0 - 230.0) as i32,
+                        (SCREEN_HEIGHT / 2.0 + 50.0) as i32,
+                        30,
+                        Color::LIGHTGRAY,
+                    );
+                }
     }
 }
