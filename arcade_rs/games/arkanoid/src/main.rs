@@ -10,6 +10,11 @@ const	BALL_SPEED	  	:f32 	= 500.0;
 const 	MAX_SPEED	  	:f32 	= 1500.0;
 const 	SPEED_INCREMENT	:f32 	= 1.01;
 
+const 	BRICK_WIDTH  	:f32 	= 80.0;
+const 	BRICK_HEIGHT 	:f32 	= 30.0;
+const	BRICK_ROWS		:i32	= 5;
+const	BRICK_COLS		:i32	= 10;
+
 
 #[derive(PartialEq)]
 enum GameState {
@@ -95,6 +100,48 @@ impl Ball {
 
     pub fn draw(&self, d: &mut RaylibDrawHandle) {
         d.draw_circle_v(self.position, self.radius, Color::new(255, 255, 0, 255));
+    }
+}
+
+
+struct Brick {
+    pub position: Vector2,
+    pub width: f32,
+    pub height: f32,
+    pub broken: bool,
+}
+
+impl Brick {
+    pub fn new(position: Vector2) -> Self {
+        Self {
+            position,
+            width: BRICK_WIDTH,
+            height: BRICK_HEIGHT,
+            broken: false,
+        }
+    }
+
+   	// the loop breaks them, bricks don t update, we ll see
+
+	pub fn reset(&mut self, x: f32, y: f32) {
+		self.position = Vector2::new(x, y);
+		self.broken = false;
+	}
+
+	pub fn is_broken(&self) -> bool {
+		self.broken
+	}
+
+	pub fn do_break(&mut self) {
+		self.broken = true;
+	}
+
+    pub fn get_rect(&self) -> Rectangle {
+        Rectangle::new(self.position.x, self.position.y, self.width, self.height)
+    }
+
+    pub fn draw(&self, d: &mut RaylibDrawHandle, color: Color) {
+        d.draw_rectangle_rec(self.get_rect(), color);
     }
 }
 
