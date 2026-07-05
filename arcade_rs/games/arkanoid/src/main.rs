@@ -2,9 +2,9 @@ use raylib::prelude::*;
 
 const 	SCREEN_WIDTH  	:f32 	= 1400.0;
 const 	SCREEN_HEIGHT 	:f32 	= 800.0;
-const 	PADDLE_WIDTH  	:f32 	= 100.0;
+const 	PADDLE_WIDTH  	:f32 	= 150.0;
 const 	PADDLE_HEIGHT 	:f32 	= 30.0;
-const 	PADDLE_SPEED  	:f32 	= 400.0;
+const 	PADDLE_SPEED  	:f32 	= 500.0;
 const 	BALL_RADIUS   	:f32 	= 20.0;
 const	BALL_SPEED	  	:f32 	= 500.0;
 const 	MAX_SPEED	  	:f32 	= 1500.0;
@@ -12,9 +12,10 @@ const 	SPEED_INCREMENT	:f32 	= 1.01;
 
 const 	BRICK_WIDTH  	:f32 	= 80.0;
 const 	BRICK_HEIGHT 	:f32 	= 30.0;
-const	BRICK_ROWS		:i32	= 5;
-const	BRICK_COLS		:i32	= 10;
+const	BRICK_ROWS		:i32	= 7;
+const	BRICK_COLS		:i32	= 14;
 
+const 	INITIAL_LIVES	:i32	= 5;
 
 #[derive(PartialEq)]
 enum GameState {
@@ -148,9 +149,8 @@ impl Brick {
 
 
 fn main() {
-	let	mut	_speed_ball   :f32 = 500.0;
 	let mut _score 	 	  :i32 = 0;
-	let mut _lives 	 	  :i32 = 3;
+	let mut lives 	 	  :i32 = INITIAL_LIVES;
 
     let (mut rl, thread) = raylib::init()
         .size(SCREEN_WIDTH as i32 , SCREEN_HEIGHT as i32)
@@ -175,6 +175,21 @@ fn main() {
 
     let mut ball = Ball::new(Vector2::new(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0), direction);
 
+   	// ---- the bricks ----
+    let mut bricks = Vec::new();
+    let brick_padding = 15.0;
+    let total_bricks_width = BRICK_COLS as f32 * (BRICK_WIDTH + brick_padding) - brick_padding;
+    let start_x = (SCREEN_WIDTH - total_bricks_width) / 2.0;
+    let start_y = 50.0;
+
+    for row in 0..BRICK_ROWS {
+        for col in 0..BRICK_COLS {
+            let x = start_x + col as f32 * (BRICK_WIDTH + brick_padding);
+            let y = start_y + row as f32 * (BRICK_HEIGHT + brick_padding);
+            bricks.push(Brick::new(Vector2::new(x, y)));
+        }
+    }
+
     rl.set_target_fps(90);
     while !rl.window_should_close() {
 
@@ -185,11 +200,12 @@ fn main() {
                 };
             }
 
-            if rl.is_key_pressed(KeyboardKey::KEY_R) {
-                paddle.reset((SCREEN_WIDTH - PADDLE_WIDTH) / 2.0, 700.0);
-                ball.reset(&mut rl);
-                game_state = GameState::Playing;
-            }
+        if rl.is_key_pressed(KeyboardKey::KEY_R) {
+            paddle.reset((SCREEN_WIDTH - PADDLE_WIDTH) / 2.0, 700.0);
+            ball.reset(&mut rl);
+            game_state = GameState::Playing;
+            lives = INITIAL_LIVES;
+        }
 
     	let delta: f32 = rl.get_frame_time();
 
@@ -230,6 +246,7 @@ fn main() {
 	            ball.position.y = SCREEN_HEIGHT - ball.radius;
 	            ball.direction.y *= -1.0;
 	            ball.speed *= SPEED_INCREMENT;
+				lives -= 1;
 	            ball.cap_speed();
 	        }
 
@@ -248,6 +265,7 @@ fn main() {
 	        // ----- end of experimental -----
       	}
 
+
         // ----- drawing -----
         let mut d = rl.begin_drawing(&thread);
         d.clear_background(Color::BLACK);
@@ -255,23 +273,40 @@ fn main() {
         paddle.draw(&mut d, Color::new(255, 0, 0, 255));
         ball.draw(&mut d);
 
+        // drawing bricks
+        for brick in &bricks {
+            if !brick.is_broken() {
+                // assign colors based on row
+                let color = if brick.position.y < 125.0 {
+                    Color::new(255, 0, 0, 255)     // red
+                } else if brick.position.y < 250.0 {
+                    Color::new(0, 255, 0, 255)     // green
+                } else {
+                    Color::new(0, 0, 255, 255)     // blue
+                };
+                brick.draw(&mut d, color);
+            }
+        }
+
+        d.draw_text(&lives.to_string(), 50, 50, 100, Color::WHITE);
+
         // Pause overlay
-                if game_state == GameState::Paused {
-                    d.draw_rectangle(0, 0, SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32, Color::new(0, 0, 0, 100));
-                    d.draw_text(
-                        "PAUSED",
-                        (SCREEN_WIDTH / 2.0 - 140.0) as i32,
-                        (SCREEN_HEIGHT / 2.0 - 40.0) as i32,
-                        80,
-                        Color::WHITE,
-                    );
-                    d.draw_text(
-                        "Press P to resume, R to restart",
-                        (SCREEN_WIDTH / 2.0 - 230.0) as i32,
-                        (SCREEN_HEIGHT / 2.0 + 50.0) as i32,
-                        30,
-                        Color::LIGHTGRAY,
-                    );
-                }
+        if game_state == GameState::Paused {
+            d.draw_rectangle(0, 0, SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32, Color::new(0, 0, 0, 100));
+            d.draw_text(
+                "PAUSED",
+                (SCREEN_WIDTH / 2.0 - 140.0) as i32,
+                (SCREEN_HEIGHT / 2.0 - 40.0) as i32,
+                80,
+                Color::WHITE,
+            );
+            d.draw_text(
+                "Press P to resume, R to restart",
+                (SCREEN_WIDTH / 2.0 - 230.0) as i32,
+                (SCREEN_HEIGHT / 2.0 + 50.0) as i32,
+                30,
+                Color::LIGHTGRAY,
+            );
+        }
     }
 }
