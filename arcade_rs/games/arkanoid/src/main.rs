@@ -21,6 +21,8 @@ const 	INITIAL_LIVES	:i32	= 5;
 enum GameState {
     Playing,
     Paused,
+    GameOver,
+    Win,
 }
 
 struct Paddle {
@@ -149,7 +151,7 @@ impl Brick {
 
 
 fn main() {
-	let mut _score 	 	  :i32 = 0;
+	let mut score 	 	  :i32 = 0;
 	let mut lives 	 	  :i32 = INITIAL_LIVES;
 
     let (mut rl, thread) = raylib::init()
@@ -197,6 +199,7 @@ fn main() {
                 game_state = match game_state {
                     GameState::Playing => GameState::Paused,
                     GameState::Paused => GameState::Playing,
+                    _ => game_state,
                 };
             }
 
@@ -205,6 +208,10 @@ fn main() {
             ball.reset(&mut rl);
             game_state = GameState::Playing;
             lives = INITIAL_LIVES;
+            score = 0;
+            for brick in &mut bricks {
+                brick.broken = false;
+            }
         }
 
     	let delta: f32 = rl.get_frame_time();
@@ -219,7 +226,7 @@ fn main() {
 	        ball.update(delta);
 	        ball.cap_speed();
 
-	        // ---- Ball wall collisions ----
+	        // ---- ball/wall collisions ----
 	        // left wall
 	        if ball.position.x < ball.radius {
 		        ball.position.x = ball.radius;
@@ -243,12 +250,18 @@ fn main() {
 	        }
 	        // Bottom wall
 	        if ball.position.y + ball.radius > SCREEN_HEIGHT {
-	            ball.position.y = SCREEN_HEIGHT - ball.radius;
-	            ball.direction.y *= -1.0;
-	            ball.speed *= SPEED_INCREMENT;
 				lives -= 1;
-	            ball.cap_speed();
-	        }
+	            // ball.cap_speed();
+				if lives <= 0 {
+			        game_state = GameState::GameOver;
+			    } else {
+					// we need a reset fn
+					paddle.reset((SCREEN_WIDTH - paddle.width) / 2.0, 700.0);
+		            ball.reset(&mut rl);
+		            game_state = GameState::Playing;
+
+				}
+			}
 
 	        // ---- paddle collisions ----
 	        let ball_center = ball.position;
@@ -263,7 +276,14 @@ fn main() {
 	        }
 
 	        // ----- end of experimental -----
+
+			// after brick collision loop
+		    let all_broken = bricks.iter().all(|b| b.is_broken());
+		    if all_broken {
+			   game_state = GameState::Win;
+		    }
       	}
+
 
 
         // ----- drawing -----
@@ -289,6 +309,7 @@ fn main() {
         }
 
         d.draw_text(&lives.to_string(), 50, 50, 100, Color::WHITE);
+        d.draw_text(&score.to_string(), SCREEN_WIDTH as i32 - 100, 50, 100, Color::WHITE);
 
         // Pause overlay
         if game_state == GameState::Paused {
@@ -307,6 +328,42 @@ fn main() {
                 30,
                 Color::LIGHTGRAY,
             );
+        }
+
+        if game_state == GameState::GameOver {
+	        d.draw_rectangle(0, 0, SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32, Color::new(0, 0, 0, 100));
+        	d.draw_text(
+        		"game over",
+        		(SCREEN_WIDTH / 2.0 - 180.0) as i32,
+        		(SCREEN_HEIGHT / 2.0 - 40.0) as i32,
+        		80,
+        		Color::WHITE,
+        	);
+        	d.draw_text(
+        		"press R to restart",
+        		(SCREEN_WIDTH / 2.0 - 130.0) as i32,
+        		(SCREEN_HEIGHT / 2.0 + 50.0) as i32,
+        		30,
+        		Color::LIGHTGRAY,
+        	);
+        }
+
+        if game_state == GameState::Win {
+	        d.draw_rectangle(0, 0, SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32, Color::new(0, 0, 0, 100));
+           	d.draw_text(
+          		"you win!",
+          		(SCREEN_WIDTH / 2.0 - 180.0) as i32, // the numbers are messed, no view no ui
+          		(SCREEN_HEIGHT / 2.0 - 40.0) as i32,
+          		80,
+          		Color::WHITE,
+           	);
+           	d.draw_text(
+          		"press R to restart",
+          		(SCREEN_WIDTH / 2.0 - 130.0) as i32,
+          		(SCREEN_HEIGHT / 2.0 + 50.0) as i32,
+          		30,
+            	Color::LIGHTGRAY,
+           	);
         }
     }
 }
