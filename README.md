@@ -1,15 +1,25 @@
 # arcade (work in progress)
 arcade games in cpp/rust
 
-## pong both in rust and cpp:
-### to do:
+## pong:
+### cpp version:
 * add menu (restart/pause) for cpp version
 * need to modify angles upon collision
 * enemy ai
 
-## arkanoid both in rust and cpp:
+### rust version:
+* modify angles upon collision.
+* enemy ai.
+
+## arkanoid:
+### cpp version:
 * add ball
-* add gravity, collision with walls
+* add collision with walls
 * add lives
 * add score
-* add obstacles
+* add bricks
+* add menu
+
+### rust version:
+* add bricks with collision detection.
+* add score.
