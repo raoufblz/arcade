@@ -263,17 +263,18 @@ fn main() {
 				}
 			}
 
-	        // ---- paddle collisions ----
-	        let ball_center = ball.position;
-	        let ball_radius = ball.radius;
+			// ---- paddle collisions ----
+			if paddle.get_rect().check_collision_circle_rec(ball.position, ball.radius) {
+			    let paddle_rect = paddle.get_rect();
+			    let hit_pos = ((ball.position.x - paddle_rect.x) / paddle_rect.width).clamp(0.0, 1.0);
+			    let angle_deg = (hit_pos - 0.5) * 2.0 * 75.0; 		// 75 max
+			    let angle_rad = angle_deg * DEG2RAD as f32;
 
-	        // paddle
-	        if paddle.get_rect().check_collision_circle_rec(ball_center, ball_radius) {
-	            ball.direction.y *= -1.0;
-	            ball.speed *= SPEED_INCREMENT;
-	            ball.cap_speed();
-	            ball.position.y = paddle.position.y - ball_radius;
-	        }
+			    ball.direction = Vector2::new(angle_rad.sin(), -angle_rad.cos()).normalized();
+			    ball.speed *= SPEED_INCREMENT;
+			    ball.cap_speed();
+			    ball.position.y = paddle_rect.y - ball.radius;
+			}
 
 	        // ----- end of experimental -----
 
