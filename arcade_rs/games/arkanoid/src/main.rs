@@ -125,12 +125,7 @@ impl Brick {
         }
     }
 
-   	// the loop breaks them, bricks don t update, we ll see
-
-	pub fn reset(&mut self, x: f32, y: f32) {
-		self.position = Vector2::new(x, y);
-		self.broken = false;
-	}
+   	// the loop breaks them, bricks don t update
 
 	pub fn is_broken(&self) -> bool {
 		self.broken
@@ -222,7 +217,6 @@ fn main() {
 
 	        paddle.update(paddle_direction, delta, SCREEN_WIDTH);
 
-	        // ----- experimental -----
 	        ball.update(delta);
 	        ball.cap_speed();
 
@@ -276,7 +270,53 @@ fn main() {
 			    ball.position.y = paddle_rect.y - ball.radius;
 			}
 
-	        // ----- end of experimental -----
+
+			// brick collisions
+			for brick in &mut bricks {
+			    if !brick.is_broken() {
+			        if brick.get_rect().check_collision_circle_rec(ball.position, ball.radius) {
+			            brick.do_break();
+			            score += 1;
+
+			            // find which side was hit
+			            let brick_rect = brick.get_rect();
+			            let overlap_x = if ball.position.x < brick_rect.x + brick_rect.width / 2.0 {
+			                (ball.position.x + ball.radius) - brick_rect.x
+			            } else {
+			                (brick_rect.x + brick_rect.width) - (ball.position.x - ball.radius)
+			            };
+			            let overlap_y = if ball.position.y < brick_rect.y + brick_rect.height / 2.0 {
+			                (ball.position.y + ball.radius) - brick_rect.y
+			            } else {
+			                (brick_rect.y + brick_rect.height) - (ball.position.y - ball.radius)
+			            };
+
+			            // bounce
+			            if overlap_x < overlap_y {
+			                // left or right side hit
+			                ball.direction.x *= -1.0;
+			                if ball.direction.x < 0.0 {
+			                    ball.position.x = brick_rect.x - ball.radius;
+			                } else {
+			                    ball.position.x = brick_rect.x + brick_rect.width + ball.radius;
+			                }
+			            } else {
+			                // top or bottom side hit
+			                ball.direction.y *= -1.0;
+			                if ball.direction.y < 0.0 {
+			                    ball.position.y = brick_rect.y - ball.radius;
+			                } else {
+			                    ball.position.y = brick_rect.y + brick_rect.height + ball.radius;
+			                }
+			            }
+
+			            ball.speed *= SPEED_INCREMENT;
+			            ball.cap_speed();
+
+			            break;
+			        }
+			    }
+			}
 
 			// after brick collision loop
 		    let all_broken = bricks.iter().all(|b| b.is_broken());
@@ -315,16 +355,20 @@ fn main() {
         // Pause overlay
         if game_state == GameState::Paused {
             d.draw_rectangle(0, 0, SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32, Color::new(0, 0, 0, 100));
+            let pause_text = "PAUSED";
+            let pause_text_width = d.measure_text(pause_text, 80) as f32;
             d.draw_text(
-                "PAUSED",
-                (SCREEN_WIDTH / 2.0 - 140.0) as i32,
+                pause_text,
+                ((SCREEN_WIDTH - pause_text_width) / 2.0) as i32,
                 (SCREEN_HEIGHT / 2.0 - 40.0) as i32,
                 80,
                 Color::WHITE,
             );
+            let restart_text = "Press P to resume, R to restart";
+            let restart_text_width = d.measure_text(restart_text, 30) as f32;
             d.draw_text(
-                "Press P to resume, R to restart",
-                (SCREEN_WIDTH / 2.0 - 230.0) as i32,
+                restart_text,
+                ((SCREEN_WIDTH - restart_text_width) / 2.0) as i32,
                 (SCREEN_HEIGHT / 2.0 + 50.0) as i32,
                 30,
                 Color::LIGHTGRAY,
@@ -333,16 +377,20 @@ fn main() {
 
         if game_state == GameState::GameOver {
 	        d.draw_rectangle(0, 0, SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32, Color::new(0, 0, 0, 100));
+			let loss_text = "game over";
+			let loss_text_width = d.measure_text(loss_text, 80) as f32;
+			d.draw_text(
+				loss_text,
+				((SCREEN_WIDTH - loss_text_width) / 2.0) as i32,
+				(SCREEN_HEIGHT / 2.0 - 40.0) as i32,
+				80,
+				Color::WHITE
+			);
+        	let restart_text = "press R to restart";
+        	let restart_text_width = d.measure_text(restart_text, 30) as f32;
         	d.draw_text(
-        		"game over",
-        		(SCREEN_WIDTH / 2.0 - 180.0) as i32,
-        		(SCREEN_HEIGHT / 2.0 - 40.0) as i32,
-        		80,
-        		Color::WHITE,
-        	);
-        	d.draw_text(
-        		"press R to restart",
-        		(SCREEN_WIDTH / 2.0 - 130.0) as i32,
+        		restart_text,
+        		((SCREEN_WIDTH - restart_text_width) / 2.0) as i32,
         		(SCREEN_HEIGHT / 2.0 + 50.0) as i32,
         		30,
         		Color::LIGHTGRAY,
@@ -351,20 +399,24 @@ fn main() {
 
         if game_state == GameState::Win {
 	        d.draw_rectangle(0, 0, SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32, Color::new(0, 0, 0, 100));
-           	d.draw_text(
-          		"you win!",
-          		(SCREEN_WIDTH / 2.0 - 180.0) as i32, // the numbers are messed, no view no ui
-          		(SCREEN_HEIGHT / 2.0 - 40.0) as i32,
-          		80,
-          		Color::WHITE,
-           	);
-           	d.draw_text(
-          		"press R to restart",
-          		(SCREEN_WIDTH / 2.0 - 130.0) as i32,
-          		(SCREEN_HEIGHT / 2.0 + 50.0) as i32,
-          		30,
-            	Color::LIGHTGRAY,
-           	);
+			let win_text = "you win!";
+			let win_text_width = d.measure_text(win_text, 80) as f32;
+			d.draw_text(
+				win_text,
+				((SCREEN_WIDTH - win_text_width) / 2.0) as i32,
+				(SCREEN_HEIGHT / 2.0 - 40.0) as i32,
+				80,
+				Color::WHITE,
+			);
+			let restart_text = "press R to restart";
+			let restart_text_width = d.measure_text(restart_text, 30) as f32;
+			d.draw_text(
+				restart_text,
+				((SCREEN_WIDTH - restart_text_width) / 2.0) as i32,
+				(SCREEN_HEIGHT / 2.0 + 50.0) as i32,
+				30,
+				Color::LIGHTGRAY,
+			);
         }
     }
 }
