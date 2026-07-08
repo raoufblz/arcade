@@ -2,9 +2,11 @@ use raylib::prelude::*;
 
 const 	SCREEN_WIDTH  	:f32 	= 1400.0;
 const 	SCREEN_HEIGHT 	:f32 	= 800.0;
+
 const 	PADDLE_WIDTH  	:f32 	= 150.0;
 const 	PADDLE_HEIGHT 	:f32 	= 30.0;
 const 	PADDLE_SPEED  	:f32 	= 500.0;
+
 const 	BALL_RADIUS   	:f32 	= 20.0;
 const	BALL_SPEED	  	:f32 	= 500.0;
 const 	MAX_SPEED	  	:f32 	= 1500.0;
@@ -225,35 +227,29 @@ fn main() {
 	        if ball.position.x < ball.radius {
 		        ball.position.x = ball.radius;
 	            ball.direction.x *= -1.0;
-	            ball.speed *= SPEED_INCREMENT;
 	            ball.cap_speed();
 	        }
 	        // right wall
 	        if ball.position.x + ball.radius > SCREEN_WIDTH {
 		        ball.position.x = SCREEN_WIDTH - ball.radius;
 	            ball.direction.x *= -1.0;
-	            ball.speed *= SPEED_INCREMENT;
 	            ball.cap_speed();
 	        }
 	        // Top wall
 	        if ball.position.y < ball.radius {
 	            ball.position.y = ball.radius;
 	            ball.direction.y *= -1.0;
-	            ball.speed *= SPEED_INCREMENT;
 	            ball.cap_speed();
 	        }
 	        // Bottom wall
 	        if ball.position.y + ball.radius > SCREEN_HEIGHT {
 				lives -= 1;
-	            // ball.cap_speed();
 				if lives <= 0 {
 			        game_state = GameState::GameOver;
 			    } else {
-					// we need a reset fn
 					paddle.reset((SCREEN_WIDTH - paddle.width) / 2.0, 700.0);
 		            ball.reset(&mut rl);
 		            game_state = GameState::Playing;
-
 				}
 			}
 
