@@ -21,5 +21,5 @@ arcade games in cpp/rust
 * add menu
 
 ### rust version:
-* add bricks with collision detection.
-* add score.
+* add 3,2,1 start!
+* fix score-lives-bricks collisions

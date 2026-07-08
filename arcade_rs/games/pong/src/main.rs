@@ -3,19 +3,25 @@ use raylib::prelude::*;
 
 const SCREEN_WIDTH		: f32 = 1600.0;
 const SCREEN_HEIGHT		: f32 = 900.0;
+
+const PADDLE_WIDTH		: f32 = 35.0;
+const PADDLE_HEIGHT		: f32 = 100.0;
 const PADDLE_SPEED		: f32 = 400.0;
-const BALL_SPEED		: f32 = 500.0;
-const MAX_SPEED			: f32 = 1500.0;
-const RECT_WIDTH		: f32 = 35.0;
-const RECT_HEIGHT		: f32 = 100.0;
-const BALL_RAD			: f32 = 30.0;
 const PADDLE_OFFSET		: f32 = 50.0;
+
+const BALL_RAD			: f32 = 30.0;
+const BALL_SPEED		: f32 = 500.0;
 const SPEED_INCREMENT	: f32 = 1.01;
+const MAX_SPEED			: f32 = 1500.0;
+
+const WIN_SCORE			: i32 = 5;
 
 #[derive(PartialEq)]
 enum GameState {
     Playing,
     Paused,
+    GameOver,
+    Win,
 }
 
 struct Paddle {
@@ -29,8 +35,8 @@ impl Paddle {
     pub fn new(x: f32, y: f32) -> Self {
         Self {
             position: Vector2::new(x, y),
-            width: RECT_WIDTH,
-            height: RECT_HEIGHT,
+            width: PADDLE_WIDTH,
+            height: PADDLE_HEIGHT,
             speed: PADDLE_SPEED,
         }
     }
@@ -109,10 +115,10 @@ fn main() {
         .build();
 
     // ---- Create paddles ----
-    let mut left_paddle = Paddle::new(PADDLE_OFFSET, (SCREEN_HEIGHT - RECT_HEIGHT) / 2.0);
+    let mut left_paddle = Paddle::new(PADDLE_OFFSET, (SCREEN_HEIGHT - PADDLE_HEIGHT) / 2.0);
     let mut right_paddle = Paddle::new(
-        SCREEN_WIDTH - PADDLE_OFFSET - RECT_WIDTH,
-        (SCREEN_HEIGHT - RECT_HEIGHT) / 2.0,
+        SCREEN_WIDTH - PADDLE_OFFSET - PADDLE_WIDTH,
+        (SCREEN_HEIGHT - PADDLE_HEIGHT) / 2.0,
     );
 
     // ---- create ball with random initial direction ----
@@ -132,16 +138,17 @@ fn main() {
             state = match state {
                 GameState::Playing => GameState::Paused,
                 GameState::Paused => GameState::Playing,
+                _ => state,
             };
         }
 
         if rl.is_key_pressed(KeyboardKey::KEY_R) {
             score_left = 0;
             score_right = 0;
-            left_paddle.reset(PADDLE_OFFSET, (SCREEN_HEIGHT - RECT_HEIGHT) / 2.0);
+            left_paddle.reset(PADDLE_OFFSET, (SCREEN_HEIGHT - PADDLE_HEIGHT) / 2.0);
             right_paddle.reset(
-                SCREEN_WIDTH - PADDLE_OFFSET - RECT_WIDTH,
-                (SCREEN_HEIGHT - RECT_HEIGHT) / 2.0,
+                SCREEN_WIDTH - PADDLE_OFFSET - PADDLE_WIDTH,
+                (SCREEN_HEIGHT - PADDLE_HEIGHT) / 2.0,
             );
             ball.reset(&mut rl);
             state = GameState::Playing;
@@ -210,6 +217,11 @@ fn main() {
                 ball.cap_speed();
                 ball.position.x = left_paddle.position.x + left_paddle.width + ball_radius;
             }
+
+            // win condition
+            if score_right == WIN_SCORE || score_left == WIN_SCORE {
+            	state = GameState::Win
+            }
         } // end of Playing update
 
         // ---- drawing ----
@@ -246,6 +258,62 @@ fn main() {
                 30,
                 Color::LIGHTGRAY,
             );
+        }
+
+        // later for ai enemy
+        if state == GameState::GameOver {
+	        d.draw_rectangle(0, 0, SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32, Color::new(0, 0, 0, 100));
+			let loss_text = "game over";
+			let loss_text_width = d.measure_text(loss_text, 80) as f32;
+
+			d.draw_text(
+				loss_text,
+				((SCREEN_WIDTH - loss_text_width) / 2.0) as i32,
+				(SCREEN_HEIGHT / 2.0 - 40.0) as i32,
+				80,
+				Color::WHITE
+			);
+
+        	let restart_text = "press R to restart";
+        	let restart_text_width = d.measure_text(restart_text, 30) as f32;
+
+        	d.draw_text(
+        		restart_text,
+        		((SCREEN_WIDTH - restart_text_width) / 2.0) as i32,
+        		(SCREEN_HEIGHT / 2.0 + 50.0) as i32,
+        		30,
+        		Color::LIGHTGRAY,
+        	);
+        }
+
+        if state == GameState::Win {
+	        d.draw_rectangle(0, 0, SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32, Color::new(0, 0, 0, 100));
+			let win_text = if score_left >= WIN_SCORE {
+		        "Left Player Wins!"
+		    } else {
+		        "Right Player Wins!"
+		    };
+
+		    let win_text_width = d.measure_text(win_text, 80) as f32;
+
+			d.draw_text(
+				win_text,
+				((SCREEN_WIDTH - win_text_width) / 2.0) as i32,
+				(SCREEN_HEIGHT / 2.0 - 40.0) as i32,
+				80,
+				Color::WHITE,
+			);
+
+			let restart_text = "press R to restart";
+			let restart_text_width = d.measure_text(restart_text, 30) as f32;
+
+			d.draw_text(
+				restart_text,
+				((SCREEN_WIDTH - restart_text_width) / 2.0) as i32,
+				(SCREEN_HEIGHT / 2.0 + 50.0) as i32,
+				30,
+				Color::LIGHTGRAY,
+			);
         }
     }
 }
