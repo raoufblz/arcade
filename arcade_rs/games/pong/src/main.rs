@@ -112,18 +112,28 @@ fn main() {
 
             // Right paddle
             if right_paddle.get_rect().check_collision_circle_rec(ball_center, ball_radius) {
-                ball.direction.x *= -1.0;
+                let paddle_rect = right_paddle.get_rect();
+                let hit_pos = ((ball_center.y - paddle_rect.y) / paddle_rect.height).clamp(0.0, 1.0);
+                let angle_deg = (hit_pos - 0.5) * 2.0 * 75.0;
+                let angle_rad = angle_deg * DEG2RAD as f32;
+
+                ball.direction = Vector2::new(-angle_rad.cos(), angle_rad.sin()).normalized();
                 ball.speed *= SPEED_INCREMENT;
                 ball.cap_speed();
-                ball.position.x = right_paddle.position.x - ball_radius;
+                ball.position.x = paddle_rect.x - ball_radius;
             }
 
             // Left paddle
             if left_paddle.get_rect().check_collision_circle_rec(ball_center, ball_radius) {
-                ball.direction.x *= -1.0;
+                let paddle_rect = left_paddle.get_rect();
+                let hit_pos = ((ball_center.y - paddle_rect.y) / paddle_rect.height).clamp(0.0, 1.0);
+                let angle_deg = (hit_pos - 0.5) * 2.0 * 75.0;
+                let angle_rad = angle_deg * DEG2RAD as f32;
+
+                ball.direction = Vector2::new(angle_rad.cos(), angle_rad.sin()).normalized();
                 ball.speed *= SPEED_INCREMENT;
                 ball.cap_speed();
-                ball.position.x = left_paddle.position.x + left_paddle.width + ball_radius;
+                ball.position.x = paddle_rect.x + paddle_rect.width + ball_radius;
             }
 
             // win condition
