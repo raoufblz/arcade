@@ -135,8 +135,8 @@ fn main() {
 
 			// brick collisions
 			for brick in &mut bricks {
-			    if !brick.is_broken() {
-			        if brick.get_rect().check_collision_circle_rec(ball.position, ball.radius) {
+			    if !brick.is_broken()
+			        && brick.get_rect().check_collision_circle_rec(ball.position, ball.radius) {
 			            brick.do_break();
 			            score += 1;
 
@@ -177,7 +177,7 @@ fn main() {
 
 			            break;
 			        }
-			    }
+
 			}
 
 			// after brick collision loop
