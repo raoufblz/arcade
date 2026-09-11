@@ -8,7 +8,6 @@ arcade games in cpp/rust
 * enemy ai
 
 ### rust version:
-* modify angles upon collision.
 * enemy ai.
 
 ## arkanoid:

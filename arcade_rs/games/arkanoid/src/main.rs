@@ -211,8 +211,10 @@ fn main() {
             }
         }
 
-        d.draw_text(&lives.to_string(), 50, 50, 100, Color::WHITE);
-        d.draw_text(&score.to_string(), SCREEN_WIDTH as i32 - 100, 50, 100, Color::WHITE);
+        d.draw_text(&format!("Lives: {}", lives), 20, 12, 30, Color::WHITE);
+        let score_text = format!("Score: {}", score);
+        let score_w = d.measure_text(&score_text, 30);
+        d.draw_text(&score_text, SCREEN_WIDTH as i32 - score_w - 20, 12, 30, Color::WHITE);
 
         // Pause overlay
         if game_state == GameState::Paused {
