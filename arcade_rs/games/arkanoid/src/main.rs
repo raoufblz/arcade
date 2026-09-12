@@ -23,7 +23,7 @@ fn main() {
         .title("arkanoid")
         .build();
 
-    let mut game_state = GameState::Playing;
+    let mut game_state = GameState::Countdown(4.0);
 
     let start_pos = Vector2::new((SCREEN_WIDTH - PADDLE_WIDTH) / 2.0, 700.0);
 
@@ -69,7 +69,7 @@ fn main() {
         if rl.is_key_pressed(KeyboardKey::KEY_R) {
             paddle.reset((SCREEN_WIDTH - PADDLE_WIDTH) / 2.0, 700.0);
             ball.reset(&mut rl);
-            game_state = GameState::Playing;
+            game_state = GameState::Countdown(4.0);
             lives = INITIAL_LIVES;
             score = 0;
             for brick in &mut bricks {
@@ -78,6 +78,13 @@ fn main() {
         }
 
     	let delta: f32 = rl.get_frame_time();
+
+    	// ---- countdown tick ----
+    	game_state = match game_state {
+    	    GameState::Countdown(t) if t - delta <= 0.0 => GameState::Playing,
+    	    GameState::Countdown(t) => GameState::Countdown(t - delta),
+    	    other => other,
+    	};
 
      	if game_state == GameState::Playing {
 		    let paddle_direction :i32 = rl.is_key_down(KeyboardKey::KEY_RIGHT) as i32
@@ -115,7 +122,7 @@ fn main() {
 			    } else {
 					paddle.reset((SCREEN_WIDTH - paddle.width) / 2.0, 700.0);
 		            ball.reset(&mut rl);
-		            game_state = GameState::Playing;
+		            game_state = GameState::Countdown(4.0);
 				}
 			}
 
@@ -188,7 +195,6 @@ fn main() {
       	}
 
 
-
         // ----- drawing -----
         let mut d = rl.begin_drawing(&thread);
         d.clear_background(Color::BLACK);
@@ -215,6 +221,24 @@ fn main() {
         let score_text = format!("Score: {}", score);
         let score_w = d.measure_text(&score_text, 30);
         d.draw_text(&score_text, SCREEN_WIDTH as i32 - score_w - 20, 12, 30, Color::WHITE);
+
+        // ---- countdown overlay ----
+        if let GameState::Countdown(t) = game_state {
+            let text = match t.ceil() as i32 {
+                4 => "3",
+                3 => "2",
+                2 => "1",
+                _ => "GO!",
+            };
+            let w = d.measure_text(text, 120) as f32;
+            d.draw_text(
+                text,
+                ((SCREEN_WIDTH - w) / 2.0) as i32,
+                (SCREEN_HEIGHT / 2.0 - 60.0) as i32,
+                120,
+                Color::WHITE,
+            );
+        }
 
         // Pause overlay
         if game_state == GameState::Paused {
