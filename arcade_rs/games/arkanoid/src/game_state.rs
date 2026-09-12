@@ -1,5 +1,5 @@
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Copy, Clone)]
 pub enum GameState {
     Playing,
     Paused,

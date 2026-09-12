@@ -85,13 +85,16 @@ fn main() {
     	    GameState::Countdown(t) => GameState::Countdown(t - delta),
     	    other => other,
     	};
+	    let can_move = matches!(game_state, GameState::Playing | GameState::Countdown(_));
 
-     	if game_state == GameState::Playing {
-		    let paddle_direction :i32 = rl.is_key_down(KeyboardKey::KEY_RIGHT) as i32
-									- rl.is_key_down(KeyboardKey::KEY_LEFT) as i32;
+	    if can_move {
+	        let paddle_direction: i32 = rl.is_key_down(KeyboardKey::KEY_RIGHT) as i32
+	            - rl.is_key_down(KeyboardKey::KEY_LEFT) as i32;
 
 	        paddle.update(paddle_direction, delta, SCREEN_WIDTH);
+	    }
 
+     	if game_state == GameState::Playing {
 	        ball.update(delta);
 	        ball.cap_speed();
 
