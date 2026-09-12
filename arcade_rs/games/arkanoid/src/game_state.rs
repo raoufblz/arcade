@@ -5,4 +5,5 @@ pub enum GameState {
     Paused,
     GameOver,
     Win,
+    Countdown(f32),
 }
