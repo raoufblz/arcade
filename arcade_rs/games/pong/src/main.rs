@@ -15,7 +15,7 @@ use raylib::prelude::*;
 fn main() {
     let mut score_left: i32 = 0;
     let mut score_right: i32 = 0;
-    let mut state = GameState::Playing;
+    let mut state = GameState::Countdown(4.0);
 
     let (mut rl, thread) = raylib::init()
         .size(SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32)
@@ -59,14 +59,22 @@ fn main() {
                 (SCREEN_HEIGHT - PADDLE_HEIGHT) / 2.0,
             );
             ball.reset(&mut rl);
-            state = GameState::Playing;
+            state = GameState::Countdown(4.0);
         }
 
         let delta: f32 = rl.get_frame_time();
 
-        // ---- update only if Playing ----
-        if state == GameState::Playing {
-            // ---- Input ----
+        // ---- countdown tick ----
+        state = match state {
+            GameState::Countdown(t) if t - delta <= 0.0 => GameState::Playing,
+            GameState::Countdown(t) => GameState::Countdown(t - delta),
+            _ => state,
+        };
+
+        let can_move = matches!(state, GameState::Playing | GameState::Countdown(_));
+
+	    if can_move {
+			// ---- Input ----
             let dir_right: i32 =
                 rl.is_key_down(KeyboardKey::KEY_DOWN) as i32 - rl.is_key_down(KeyboardKey::KEY_UP) as i32;
             let dir_left: i32 =
@@ -75,6 +83,10 @@ fn main() {
             // ---- Update paddles ----
             right_paddle.update(dir_right, delta);
             left_paddle.update(dir_left, delta);
+			}
+
+        // ---- update only if Playing ----
+        if state == GameState::Playing {
 
             // ---- Update ball ----
             ball.update(delta);
@@ -85,11 +97,13 @@ fn main() {
             if ball.position.x < ball.radius {
                 score_right += 1;
                 ball.reset(&mut rl);
+                state = GameState::Countdown(4.0);
             }
             // right wall => left player scores
             if ball.position.x + ball.radius > SCREEN_WIDTH {
                 score_left += 1;
                 ball.reset(&mut rl);
+                state = GameState::Countdown(4.0);
             }
             // Top wall
             if ball.position.y < ball.radius {
@@ -158,6 +172,24 @@ fn main() {
         ball.draw(&mut d);
 
         d.draw_fps(10, 10);
+
+        // ---- countdown overlay ----
+        if let GameState::Countdown(t) = state {
+            let text = match t.ceil() as i32 {
+                4 => "3",
+                3 => "2",
+                2 => "1",
+                _ => "GO!",
+            };
+            let w = d.measure_text(text, 120) as f32;
+            d.draw_text(
+                text,
+                ((SCREEN_WIDTH - w) / 2.0) as i32,
+                (SCREEN_HEIGHT / 2.0 - 60.0) as i32,
+                120,
+                Color::WHITE,
+            );
+        }
 
         // Pause overlay
         if state == GameState::Paused {
