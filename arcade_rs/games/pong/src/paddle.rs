@@ -1,4 +1,4 @@
-use crate::config::{PADDLE_HEIGHT, PADDLE_WIDTH, PADDLE_SPEED, SCREEN_HEIGHT};
+use crate::config::{PADDLE_HEIGHT, PADDLE_SPEED, PADDLE_WIDTH, SCREEN_HEIGHT};
 use raylib::prelude::*;
 
 pub struct Paddle {

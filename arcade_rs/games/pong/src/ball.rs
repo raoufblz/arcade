@@ -1,7 +1,6 @@
 use crate::config::{BALL_RAD, BALL_SPEED, MAX_SPEED, SCREEN_HEIGHT, SCREEN_WIDTH};
-use raylib::prelude::*;
 use raylib::consts::DEG2RAD;
-
+use raylib::prelude::*;
 
 pub struct Ball {
     pub position: Vector2,
