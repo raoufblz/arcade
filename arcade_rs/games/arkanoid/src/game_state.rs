@@ -1,4 +1,3 @@
-
 #[derive(PartialEq, Copy, Clone)]
 pub enum GameState {
     Playing,

@@ -1,6 +1,5 @@
+use crate::config::{PADDLE_HEIGHT, PADDLE_SPEED, PADDLE_WIDTH};
 use raylib::prelude::*;
-use crate::config::{PADDLE_WIDTH, PADDLE_HEIGHT, PADDLE_SPEED};
-
 
 pub struct Paddle {
     pub position: Vector2,
@@ -21,10 +20,10 @@ impl Paddle {
 
     pub fn update(&mut self, direction: i32, delta: f32, screen_width: f32) {
         self.position.x += direction as f32 * self.speed * delta;
-		self.position.x = self.position.x.clamp(0.0, screen_width - self.width);
+        self.position.x = self.position.x.clamp(0.0, screen_width - self.width);
     }
 
-	pub fn reset(&mut self, x: f32, y: f32) {
+    pub fn reset(&mut self, x: f32, y: f32) {
         self.position = Vector2::new(x, y);
     }
 

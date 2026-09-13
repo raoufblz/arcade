@@ -1,6 +1,5 @@
+use crate::config::{BRICK_HEIGHT, BRICK_WIDTH};
 use raylib::prelude::*;
-use crate::config::{BRICK_WIDTH, BRICK_HEIGHT};
-
 
 pub struct Brick {
     pub position: Vector2,
@@ -19,15 +18,15 @@ impl Brick {
         }
     }
 
-   	// the loop breaks them, bricks don t update
+    // the loop breaks them, bricks don t update
 
-	pub fn is_broken(&self) -> bool {
-		self.broken
-	}
+    pub fn is_broken(&self) -> bool {
+        self.broken
+    }
 
-	pub fn do_break(&mut self) {
-		self.broken = true;
-	}
+    pub fn do_break(&mut self) {
+        self.broken = true;
+    }
 
     pub fn get_rect(&self) -> Rectangle {
         Rectangle::new(self.position.x, self.position.y, self.width, self.height)
@@ -37,4 +36,3 @@ impl Brick {
         d.draw_rectangle_rec(self.get_rect(), color);
     }
 }
-

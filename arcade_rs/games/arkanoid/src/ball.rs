@@ -1,13 +1,12 @@
-use raylib::prelude::*;
+use crate::config::{BALL_RADIUS, BALL_SPEED, MAX_SPEED, SCREEN_HEIGHT, SCREEN_WIDTH};
 use raylib::consts::DEG2RAD;
-use crate::config::{SCREEN_WIDTH, SCREEN_HEIGHT, BALL_RADIUS, BALL_SPEED, MAX_SPEED};
-
+use raylib::prelude::*;
 
 pub struct Ball {
-	pub position: Vector2,
-	pub direction: Vector2,
-	pub speed: f32,
-	pub radius: f32,
+    pub position: Vector2,
+    pub direction: Vector2,
+    pub speed: f32,
+    pub radius: f32,
 }
 
 impl Ball {
