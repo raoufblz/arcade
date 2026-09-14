@@ -29,13 +29,7 @@ impl Ball {
     pub fn reset(&mut self, rl: &mut RaylibHandle) {
         self.position = Vector2::new(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0);
         self.speed = BALL_SPEED;
-
-        let mut angle = 0;
-        while angle % 90 == 0 || (angle > 75 && angle < 105) || (angle > 255 && angle < 285) {
-            angle = rl.get_random_value(1..360);
-        }
-        let radians: f32 = (angle as f32) * DEG2RAD as f32;
-        self.direction = Vector2::new(radians.cos(), radians.sin());
+        self.randomize_direction(rl);
     }
 
     pub fn cap_speed(&mut self) {
