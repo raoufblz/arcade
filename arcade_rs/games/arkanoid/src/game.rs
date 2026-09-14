@@ -1,41 +1,52 @@
 use crate::ball::Ball;
+use crate::bricks::Brick;
 use crate::config::*;
 use crate::game_state::GameState;
 use crate::paddle::Paddle;
-use crate::bricks::Brick;
 
 use raylib::consts::DEG2RAD;
 use raylib::prelude::*;
 
-
 pub struct Game {
-	pub game_state: GameState,
-	pub ball: Ball,
-	pub paddle: Paddle,
-	pub bricks: Vec<Brick>,
-	pub score: i32,
-	pub lives: i32,
+    pub game_state: GameState,
+    pub ball: Ball,
+    pub paddle: Paddle,
+    pub bricks: Vec<Brick>,
+    pub score: i32,
+    pub lives: i32,
 }
 
 impl Game {
-	pub fn new(rl: &mut RaylibHandle) -> Self {
-		Self{
-			game_state: GameState::Countdown(4.0),
-			ball: Ball::new(
-    			rl,
-    			Vector2::new(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0),
-    		),
-			paddle: Paddle::new(Vector2::new((SCREEN_WIDTH - PADDLE_WIDTH) / 2.0, 700.0)),
-			bricks: bricks,
-			score: 0,
-			lives: INITIAL_LIVES,
-		}
-	}
+    pub fn new(rl: &mut RaylibHandle) -> Self {
+        Self {
+            game_state: GameState::Countdown(4.0),
+            ball: Ball::new(rl, Vector2::new(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0)),
+            paddle: Paddle::new(Vector2::new((SCREEN_WIDTH - PADDLE_WIDTH) / 2.0, 700.0)),
+            bricks: Self::build_bricks(),
+            score: 0,
+            lives: INITIAL_LIVES,
+        }
+    }
 
+    fn build_bricks() -> Vec<Brick> {
+        let mut bricks = Vec::with_capacity((BRICK_ROWS * BRICK_COLS) as usize);
+        let brick_padding = 15.0;
+        let total_width = BRICK_COLS as f32 * (BRICK_WIDTH + brick_padding) - brick_padding;
+        let start_x = (SCREEN_WIDTH - total_width) / 2.0;
+        let start_y = 50.0;
 
-	pub fn update(&mut self, rl: &mut RaylibHandle) {
+        for row in 0..BRICK_ROWS {
+            for col in 0..BRICK_COLS {
+                let x = start_x + col as f32 * (BRICK_WIDTH + brick_padding);
+                let y = start_y + row as f32 * (BRICK_HEIGHT + brick_padding);
+                bricks.push(Brick::new(Vector2::new(x, y)));
+            }
+        }
+        bricks
+    }
 
-		if rl.is_key_pressed(KeyboardKey::KEY_P) {
+    pub fn update(&mut self, rl: &mut RaylibHandle) {
+        if rl.is_key_pressed(KeyboardKey::KEY_P) {
             self.game_state = match self.game_state {
                 GameState::Playing => GameState::Paused,
                 GameState::Paused => GameState::Playing,
@@ -44,8 +55,9 @@ impl Game {
         }
 
         if rl.is_key_pressed(KeyboardKey::KEY_R) {
-            self.paddle.reset((SCREEN_WIDTH - PADDLE_WIDTH) / 2.0, 700.0);
-            self.ball.reset(&mut rl);
+            self.paddle
+                .reset((SCREEN_WIDTH - PADDLE_WIDTH) / 2.0, 700.0);
+            self.ball.reset(rl);
             self.game_state = GameState::Countdown(4.0);
             self.lives = INITIAL_LIVES;
             self.score = 0;
@@ -62,7 +74,10 @@ impl Game {
             GameState::Countdown(t) => GameState::Countdown(t - delta),
             other => other,
         };
-        let can_move = matches!(self.game_state, GameState::Playing | GameState::Countdown(_));
+        let can_move = matches!(
+            self.game_state,
+            GameState::Playing | GameState::Countdown(_)
+        );
 
         if can_move {
             let paddle_direction: i32 = rl.is_key_down(KeyboardKey::KEY_RIGHT) as i32
@@ -98,16 +113,18 @@ impl Game {
             if self.ball.position.y + self.ball.radius > SCREEN_HEIGHT {
                 self.lives -= 1;
                 if self.lives <= 0 {
-                self.game_state = GameState::GameOver;
+                    self.game_state = GameState::GameOver;
                 } else {
-                    self.paddle.reset((SCREEN_WIDTH - self.paddle.width) / 2.0, 700.0);
-                    self.ball.reset(&mut rl);
+                    self.paddle
+                        .reset((SCREEN_WIDTH - self.paddle.width) / 2.0, 700.0);
+                    self.ball.reset(rl);
                     self.game_state = GameState::Countdown(4.0);
                 }
             }
 
             // ---- paddle collisions ----
-            if self.paddle
+            if self
+                .paddle
                 .get_rect()
                 .check_collision_circle_rec(self.ball.position, self.ball.radius)
             {
@@ -124,7 +141,7 @@ impl Game {
             }
 
             // brick collisions
-            for brick in &mut bricks {
+            for brick in &mut self.bricks {
                 if !brick.is_broken()
                     && brick
                         .get_rect()
@@ -135,15 +152,19 @@ impl Game {
 
                     // find which side was hit
                     let brick_rect = brick.get_rect();
-                    let overlap_x = if self.ball.position.x < brick_rect.x + brick_rect.width / 2.0 {
+                    let overlap_x = if self.ball.position.x < brick_rect.x + brick_rect.width / 2.0
+                    {
                         (self.ball.position.x + self.ball.radius) - brick_rect.x
                     } else {
-                        (brick_rect.x + brick_rect.width) - (self.ball.position.x - self.ball.radius)
+                        (brick_rect.x + brick_rect.width)
+                            - (self.ball.position.x - self.ball.radius)
                     };
-                    let overlap_y = if self.ball.position.y < brick_rect.y + brick_rect.height / 2.0 {
+                    let overlap_y = if self.ball.position.y < brick_rect.y + brick_rect.height / 2.0
+                    {
                         (self.ball.position.y + self.ball.radius) - brick_rect.y
                     } else {
-                        (brick_rect.y + brick_rect.height) - (self.ball.position.y - self.ball.radius)
+                        (brick_rect.y + brick_rect.height)
+                            - (self.ball.position.y - self.ball.radius)
                     };
 
                     // bounce
@@ -153,7 +174,8 @@ impl Game {
                         if self.ball.direction.x < 0.0 {
                             self.ball.position.x = brick_rect.x - self.ball.radius;
                         } else {
-                            self.ball.position.x = brick_rect.x + brick_rect.width + self.ball.radius;
+                            self.ball.position.x =
+                                brick_rect.x + brick_rect.width + self.ball.radius;
                         }
                     } else {
                         // top or bottom side hit
@@ -161,7 +183,8 @@ impl Game {
                         if self.ball.direction.y < 0.0 {
                             self.ball.position.y = brick_rect.y - self.ball.radius;
                         } else {
-                            self.ball.position.y = brick_rect.y + brick_rect.height + self.ball.radius;
+                            self.ball.position.y =
+                                brick_rect.y + brick_rect.height + self.ball.radius;
                         }
                     }
 
@@ -178,18 +201,16 @@ impl Game {
                 self.game_state = GameState::Win;
             }
         }
+    }
 
-	}
-
-
-	pub fn draw(&self, d: &mut RaylibDrawHandle) {
-		d.clear_background(Color::BLACK);
+    pub fn draw(&self, d: &mut RaylibDrawHandle) {
+        d.clear_background(Color::BLACK);
         d.draw_fps(10, 10);
-        self.paddle.draw(&mut d, Color::new(255, 0, 0, 255));
-        self.ball.draw(&mut d);
+        self.paddle.draw(d, Color::new(255, 0, 0, 255));
+        self.ball.draw(d);
 
         // drawing bricks
-        for brick in &bricks {
+        for brick in &self.bricks {
             if !brick.is_broken() {
                 // assign colors based on row
                 let color = if brick.position.y < 125.0 {
@@ -199,7 +220,7 @@ impl Game {
                 } else {
                     Color::new(0, 0, 255, 255) // blue
                 };
-                brick.draw(&mut d, color);
+                brick.draw(d, color);
             }
         }
 
@@ -316,5 +337,5 @@ impl Game {
                 Color::LIGHTGRAY,
             );
         }
-	}
+    }
 }
