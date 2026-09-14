@@ -10,13 +10,15 @@ pub struct Ball {
 }
 
 impl Ball {
-    pub fn new(position: Vector2, direction: Vector2) -> Self {
-        Self {
+    pub fn new(rl: &mut RaylibHandle, position: Vector2) -> Self {
+        let mut ball = Self {
             position,
-            direction,
+            direction: Vector2::zero(),
             speed: BALL_SPEED,
             radius: BALL_RADIUS,
-        }
+        };
+        ball.randomize_direction(rl);
+        ball
     }
 
     pub fn update(&mut self, delta: f32) {
@@ -27,14 +29,7 @@ impl Ball {
     pub fn reset(&mut self, rl: &mut RaylibHandle) {
         self.position = Vector2::new(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0);
         self.speed = BALL_SPEED;
-
-        let mut angle = 0;
-        while angle % 90 == 0 {
-            angle = rl.get_random_value(15..165);
-        }
-
-        let radians: f32 = (angle as f32) * DEG2RAD as f32;
-        self.direction = Vector2::new(radians.cos(), radians.sin());
+        self.randomize_direction(rl);
     }
 
     pub fn cap_speed(&mut self) {
@@ -45,5 +40,16 @@ impl Ball {
 
     pub fn draw(&self, d: &mut RaylibDrawHandle) {
         d.draw_circle_v(self.position, self.radius, Color::new(255, 255, 0, 255));
+    }
+
+    fn randomize_direction(&mut self, rl: &mut RaylibHandle) {
+        let mut angle = 0;
+        while angle % 90 == 0 {
+            angle = rl.get_random_value(15..165);
+        }
+
+        let radians: f32 = angle as f32 * DEG2RAD as f32;
+        let direction = Vector2::new(radians.cos(), radians.sin());
+        self.direction = direction;
     }
 }
