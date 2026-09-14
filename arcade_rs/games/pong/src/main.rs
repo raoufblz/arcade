@@ -2,6 +2,7 @@ mod ball;
 mod config;
 mod game_state;
 mod paddle;
+mod game;
 
 use crate::ball::Ball;
 use crate::config::*;
@@ -28,16 +29,11 @@ fn main() {
         (SCREEN_HEIGHT - PADDLE_HEIGHT) / 2.0,
     );
 
-    // ---- create ball with random initial direction ----
-    let mut angle = 0;
-    while angle % 90 == 0 || (angle > 75 && angle < 105) || (angle > 255 && angle < 285) {
-        angle = rl.get_random_value(1..360);
-    }
-    let radians: f32 = angle as f32 * DEG2RAD as f32;
-    let direction = Vector2::new(radians.cos(), radians.sin());
+    // // ---- create ball with random initial direction ----
     let mut ball = Ball::new(
+    	&mut rl,
         Vector2::new(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0),
-        direction,
+
     );
 
     rl.set_target_fps(90);

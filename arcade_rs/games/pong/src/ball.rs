@@ -10,13 +10,15 @@ pub struct Ball {
 }
 
 impl Ball {
-    pub fn new(position: Vector2, direction: Vector2) -> Self {
-        Self {
+    pub fn new(rl: &mut RaylibHandle,position: Vector2) -> Self {
+        let mut ball =Self {
             position,
-            direction,
+            direction: Vector2::zero(),
             speed: BALL_SPEED,
             radius: BALL_RAD,
-        }
+        };
+        ball.randomize_direction(rl);
+        ball
     }
 
     pub fn update(&mut self, delta: f32) {
@@ -44,5 +46,15 @@ impl Ball {
 
     pub fn draw(&self, d: &mut RaylibDrawHandle) {
         d.draw_circle_v(self.position, self.radius, Color::new(255, 255, 0, 255));
+    }
+
+    fn randomize_direction(&mut self, rl: &mut RaylibHandle) {
+		let mut angle = 0;
+		while angle % 90 == 0 || (angle > 75 && angle < 105) || (angle > 255 && angle < 285) {
+		angle = rl.get_random_value(1..360);
+		}
+		let radians: f32 = angle as f32 * DEG2RAD as f32;
+		let direction = Vector2::new(radians.cos(), radians.sin());
+		self.direction = direction;
     }
 }
