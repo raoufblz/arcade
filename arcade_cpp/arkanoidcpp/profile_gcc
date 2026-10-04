@@ -13,3 +13,4 @@ PATH+=(path)C:/msys64/mingw64/bin
 
 [conf]
 tools.cmake.cmaketoolchain:generator=Ninja
+tools.build:compiler_executables={"c": "gcc", "cpp": "g++"}
